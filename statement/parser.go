@@ -51,15 +51,15 @@ type rawBlock struct {
 	Trailing []string
 }
 
-func Parse(text string, logger anyLogger) (Statement, error) {
+func Parse(text string, logger anyLogger) (ParsedStatement, error) {
 	holder, accNum, iban, bic, from, to := parseHeader(text)
 
 	transactions, err := parseTransactions(text, logger)
 	if err != nil {
-		return Statement{}, fmt.Errorf("parse transactions: %w", err)
+		return ParsedStatement{}, fmt.Errorf("parse transactions: %w", err)
 	}
 
-	return Statement{
+	return ParsedStatement{
 		AccountHolder: holder,
 		AccountNumber: accNum,
 		IBAN:          iban,
@@ -228,16 +228,16 @@ func looksLikeLeadingLine(line string) bool {
 	}
 }
 
-func ParseTransaction(raw string) (Transaction, error) {
+func ParseTransaction(raw string) (ParsedTransaction, error) {
 	lines := strings.Split(raw, "\n")
 
 	mainIdx := -1
-	var tx Transaction
+	var tx ParsedTransaction
 
 	for i, line := range lines {
 		parsed, ok, err := parseMainLine(line)
 		if err != nil {
-			return Transaction{}, err
+			return ParsedTransaction{}, err
 		}
 		if ok {
 			mainIdx = i
@@ -247,7 +247,7 @@ func ParseTransaction(raw string) (Transaction, error) {
 	}
 
 	if mainIdx == -1 {
-		return Transaction{}, fmt.Errorf("no transaction row found in block: %q", raw)
+		return ParsedTransaction{}, fmt.Errorf("no transaction row found in block: %q", raw)
 	}
 
 	var descParts []string
@@ -269,44 +269,44 @@ func ParseTransaction(raw string) (Transaction, error) {
 	return tx, nil
 }
 
-func parseMainLine(line string) (Transaction, bool, error) {
+func parseMainLine(line string) (ParsedTransaction, bool, error) {
 	s := normalizeTransactionText(line)
 	if s == "" {
-		return Transaction{}, false, nil
+		return ParsedTransaction{}, false, nil
 	}
 
 	amountMatch := reAmount.FindStringSubmatchIndex(s)
 	if amountMatch == nil {
-		return Transaction{}, false, nil
+		return ParsedTransaction{}, false, nil
 	}
 
 	rawAmount := normalizeAmount(s[amountMatch[2]:amountMatch[3]])
 	amountCents, err := parseAmountCents(rawAmount)
 	if err != nil {
-		return Transaction{}, false, fmt.Errorf("parse amount %q: %w", rawAmount, err)
+		return ParsedTransaction{}, false, fmt.Errorf("parse amount %q: %w", rawAmount, err)
 	}
 
 	s = strings.TrimSpace(s[:amountMatch[0]])
 	head := reHead.FindStringSubmatch(s)
 	if head == nil {
-		return Transaction{}, false, nil
+		return ParsedTransaction{}, false, nil
 	}
 
 	num, err := strconv.Atoi(head[1])
 	if err != nil {
-		return Transaction{}, false, fmt.Errorf("parse transaction number %q: %w", head[1], err)
+		return ParsedTransaction{}, false, fmt.Errorf("parse transaction number %q: %w", head[1], err)
 	}
 
 	dateValue, err := time.Parse(dateLayoutFR, head[2])
 	if err != nil {
-		return Transaction{}, false, fmt.Errorf("parse transaction date %q: %w", head[2], err)
+		return ParsedTransaction{}, false, fmt.Errorf("parse transaction date %q: %w", head[2], err)
 	}
 
 	rest := strings.TrimSpace(strings.TrimPrefix(s, head[0]))
 	for _, op := range opTypes {
 		if rest == op || strings.HasPrefix(rest, op+" ") {
 			desc := strings.TrimSpace(strings.TrimPrefix(rest, op))
-			return Transaction{
+			return ParsedTransaction{
 				Number:      num,
 				Date:        dateValue,
 				RawDate:     head[2],
@@ -318,16 +318,16 @@ func parseMainLine(line string) (Transaction, bool, error) {
 		}
 	}
 
-	return Transaction{}, false, nil
+	return ParsedTransaction{}, false, nil
 }
 
-func parseTransactions(text string, logger anyLogger) ([]Transaction, error) {
+func parseTransactions(text string, logger anyLogger) ([]ParsedTransaction, error) {
 	rawTransactions, err := SplitTransactions(text)
 	if err != nil {
 		return nil, fmt.Errorf("split transactions: %w", err)
 	}
 
-	txs := make([]Transaction, 0, len(rawTransactions))
+	txs := make([]ParsedTransaction, 0, len(rawTransactions))
 	for _, raw := range rawTransactions {
 		tx, err := ParseTransaction(raw)
 		if err != nil {
