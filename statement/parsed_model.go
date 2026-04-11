@@ -8,17 +8,17 @@ import (
 
 const dateLayoutISO = "2006-01-02"
 
-type Statement struct {
-	AccountHolder string        `json:"account_holder"`
-	AccountNumber string        `json:"account_number"`
-	IBAN          string        `json:"iban"`
-	BIC           string        `json:"bic"`
-	PeriodFrom    string        `json:"period_from"`
-	PeriodTo      string        `json:"period_to"`
-	Transactions  []Transaction `json:"transactions"`
+type ParsedStatement struct {
+	AccountHolder string             `json:"account_holder"`
+	AccountNumber string             `json:"account_number"`
+	IBAN          string             `json:"iban"`
+	BIC           string             `json:"bic"`
+	PeriodFrom    string             `json:"period_from"`
+	PeriodTo      string             `json:"period_to"`
+	Transactions  []ParsedTransaction `json:"transactions"`
 }
 
-type Transaction struct {
+type ParsedTransaction struct {
 	Number      int
 	Date        time.Time
 	RawDate     string
@@ -39,7 +39,7 @@ type transactionJSON struct {
 	AmountRaw   string `json:"amount_raw,omitempty"`
 }
 
-func (t Transaction) MarshalJSON() ([]byte, error) {
+func (t ParsedTransaction) MarshalJSON() ([]byte, error) {
 	payload := transactionJSON{
 		Number:      t.Number,
 		Date:        t.DateISO(),
@@ -53,14 +53,14 @@ func (t Transaction) MarshalJSON() ([]byte, error) {
 	return json.Marshal(payload)
 }
 
-func (t Transaction) DateISO() string {
+func (t ParsedTransaction) DateISO() string {
 	if t.Date.IsZero() {
 		return ""
 	}
 	return t.Date.Format(dateLayoutISO)
 }
 
-func (t Transaction) AmountEuroString() string {
+func (t ParsedTransaction) AmountEuroString() string {
 	return formatAmountEuro(t.AmountCents)
 }
 

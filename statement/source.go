@@ -40,10 +40,10 @@ func ExtractText(ctx context.Context, pdfPath string) (string, error) {
 	return out.String(), nil
 }
 
-func ParseFile(ctx context.Context, path string, logger anyLogger) (Statement, error) {
+func ParseFile(ctx context.Context, path string, logger anyLogger) (ParsedStatement, error) {
 	text, err := Read(path, ctx)
 	if err != nil {
-		return Statement{}, fmt.Errorf("read statement: %w", err)
+		return ParsedStatement{}, fmt.Errorf("read statement: %w", err)
 	}
 	return Parse(text, logger)
 }
