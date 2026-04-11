@@ -1,0 +1,5 @@
+read:
+  - go_modern_guidelines.md
+
+auto-commits: true
+dirty-commits: true

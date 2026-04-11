@@ -1,0 +1,1100 @@
+{
+  "account_holder": "M MIKHAIL KLEMIN",
+  "account_number": "29790190001",
+  "iban": "FR7616598000012979019000124",
+  "bic": "FPELFR21XXX",
+  "period_from": "01/01/2026",
+  "period_to": "31/01/2026",
+  "transactions": [
+    {
+      "number": 1,
+      "date": "2026-01-01",
+      "date_raw": "01/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -2514,
+      "amount_eur": "-25.14",
+      "amount_raw": "-25,14 €"
+    },
+    {
+      "number": 2,
+      "date": "2026-01-01",
+      "date_raw": "01/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -3493,
+      "amount_eur": "-34.93",
+      "amount_raw": "-34,93 €"
+    },
+    {
+      "number": 3,
+      "date": "2026-01-02",
+      "date_raw": "02/01/2026",
+      "type": "VIREMENT",
+      "description": "TATIANA KLEMINA Virement Nickel FR7616598000014000065834064",
+      "amount_cents": -700,
+      "amount_eur": "-7.00",
+      "amount_raw": "-7,00 €"
+    },
+    {
+      "number": 4,
+      "date": "2026-01-03",
+      "date_raw": "03/01/2026",
+      "type": "FRAIS RETRAIT DAB",
+      "description": "CASH SERVICES VILLENEUVE D",
+      "amount_cents": -150,
+      "amount_eur": "-1.50",
+      "amount_raw": "-1,50 €"
+    },
+    {
+      "number": 5,
+      "date": "2026-01-03",
+      "date_raw": "03/01/2026",
+      "type": "RETRAIT DAB",
+      "description": "CASH SERVICES VILLENEUVE D",
+      "amount_cents": -14000,
+      "amount_eur": "-140.00",
+      "amount_raw": "-140,00 €"
+    },
+    {
+      "number": 6,
+      "date": "2026-01-03",
+      "date_raw": "03/01/2026",
+      "type": "ACHAT",
+      "description": "IDENTITE PHOTO PARIS",
+      "amount_cents": -599,
+      "amount_eur": "-5.99",
+      "amount_raw": "-5,99 €"
+    },
+    {
+      "number": 7,
+      "date": "2026-01-03",
+      "date_raw": "03/01/2026",
+      "type": "ACHAT",
+      "description": "CRF FLERS VILLEN VILLENEUVE D",
+      "amount_cents": -9117,
+      "amount_eur": "-91.17",
+      "amount_raw": "-91,17 €"
+    },
+    {
+      "number": 8,
+      "date": "2026-01-04",
+      "date_raw": "04/01/2026",
+      "type": "ACHAT",
+      "description": "AUCHAN 0023M VILLENEUVE D",
+      "amount_cents": -193,
+      "amount_eur": "-1.93",
+      "amount_raw": "-1,93 €"
+    },
+    {
+      "number": 9,
+      "date": "2026-01-04",
+      "date_raw": "04/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -2209,
+      "amount_eur": "-22.09",
+      "amount_raw": "-22,09 €"
+    },
+    {
+      "number": 10,
+      "date": "2026-01-04",
+      "date_raw": "04/01/2026",
+      "type": "PRELEVEMENT",
+      "description": "AXA FRANCE IARD SA I0000922187831- CONTRAT0000021638492804",
+      "amount_cents": -1957,
+      "amount_eur": "-19.57",
+      "amount_raw": "-19,57 €"
+    },
+    {
+      "number": 11,
+      "date": "2026-01-04",
+      "date_raw": "04/01/2026",
+      "type": "PRELEVEMENT",
+      "description": "SOCIT DES EAUX DE LA MTROPOLE DE LILLE SEMEL RUM: XX802796764SEPA/ICS:FR85ZZZ89312A- 6074323833720250225000 002",
+      "amount_cents": -10875,
+      "amount_eur": "-108.75",
+      "amount_raw": "-108,75 €"
+    },
+    {
+      "number": 12,
+      "date": "2026-01-05",
+      "date_raw": "05/01/2026",
+      "type": "VIREMENT",
+      "description": "CAF DU NORD 6912883GKLEMIN 122025ME FR7611808009230002000110136",
+      "amount_cents": 69221,
+      "amount_eur": "692.21",
+      "amount_raw": "692,21 €"
+    },
+    {
+      "number": 13,
+      "date": "2026-01-05",
+      "date_raw": "05/01/2026",
+      "type": "VIREMENT",
+      "description": "Klemin Ivan Virement Nickel FR7616598000014000117403726",
+      "amount_cents": -400,
+      "amount_eur": "-4.00",
+      "amount_raw": "-4,00 €"
+    },
+    {
+      "number": 14,
+      "date": "2026-01-05",
+      "date_raw": "05/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -2883,
+      "amount_eur": "-28.83",
+      "amount_raw": "-28,83 €"
+    },
+    {
+      "number": 15,
+      "date": "2026-01-06",
+      "date_raw": "06/01/2026",
+      "type": "VIREMENT",
+      "description": "Klemin Ivan Virement Nickel FR7616598000014000117403726",
+      "amount_cents": -400,
+      "amount_eur": "-4.00",
+      "amount_raw": "-4,00 €"
+    },
+    {
+      "number": 16,
+      "date": "2026-01-06",
+      "date_raw": "06/01/2026",
+      "type": "PRELEVEMENT",
+      "description": "MAIF 79038 NIORT CEDEX ECHEANCE JANVIER 2026",
+      "amount_cents": -11396,
+      "amount_eur": "-113.96",
+      "amount_raw": "-113,96 €"
+    },
+    {
+      "number": 17,
+      "date": "2026-01-06",
+      "date_raw": "06/01/2026",
+      "type": "PRELEVEMENT",
+      "description": "Free Telecom Free HautDebit 1441016038",
+      "amount_cents": -4999,
+      "amount_eur": "-49.99",
+      "amount_raw": "-49,99 €"
+    },
+    {
+      "number": 18,
+      "date": "2026-01-06",
+      "date_raw": "06/01/2026",
+      "type": "ACHAT",
+      "description": "MGP*Vinted Vilnius",
+      "amount_cents": -773,
+      "amount_eur": "-7.73",
+      "amount_raw": "-7,73 €"
+    },
+    {
+      "number": 19,
+      "date": "2026-01-07",
+      "date_raw": "07/01/2026",
+      "type": "ACHAT",
+      "description": "BOUCHERIE DE L O VILLENEUVE D",
+      "amount_cents": -1620,
+      "amount_eur": "-16.20",
+      "amount_raw": "-16,20 €"
+    },
+    {
+      "number": 20,
+      "date": "2026-01-07",
+      "date_raw": "07/01/2026",
+      "type": "ACHAT",
+      "description": "PHARMACIE DU HE VILLENEUVE D'",
+      "amount_cents": -1600,
+      "amount_eur": "-16.00",
+      "amount_raw": "-16,00 €"
+    },
+    {
+      "number": 21,
+      "date": "2026-01-07",
+      "date_raw": "07/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -4476,
+      "amount_eur": "-44.76",
+      "amount_raw": "-44,76 €"
+    },
+    {
+      "number": 22,
+      "date": "2026-01-07",
+      "date_raw": "07/01/2026",
+      "type": "ACHAT",
+      "description": "ST VIN PKG CAISS LILLE",
+      "amount_cents": -100,
+      "amount_eur": "-1.00",
+      "amount_raw": "-1,00 €"
+    },
+    {
+      "number": 23,
+      "date": "2026-01-07",
+      "date_raw": "07/01/2026",
+      "type": "ACHAT",
+      "description": "PAYPAL *MAXICOFFEE 0557153610",
+      "amount_cents": -4752,
+      "amount_eur": "-47.52",
+      "amount_raw": "-47,52 €"
+    },
+    {
+      "number": 24,
+      "date": "2026-01-07",
+      "date_raw": "07/01/2026",
+      "type": "ACHAT",
+      "description": "ILEVIA DAT METRO MARCQ EN BARO",
+      "amount_cents": -1580,
+      "amount_eur": "-15.80",
+      "amount_raw": "-15,80 €"
+    },
+    {
+      "number": 25,
+      "date": "2026-01-07",
+      "date_raw": "07/01/2026",
+      "type": "ACHAT",
+      "description": "PAYPAL *TEMU 35314369001",
+      "amount_cents": -4477,
+      "amount_eur": "-44.77",
+      "amount_raw": "-44,77 €"
+    },
+    {
+      "number": 26,
+      "date": "2026-01-07",
+      "date_raw": "07/01/2026",
+      "type": "ACHAT",
+      "description": "CASIER DU NORD LILLE",
+      "amount_cents": -1140,
+      "amount_eur": "-11.40",
+      "amount_raw": "-11,40 €"
+    },
+    {
+      "number": 27,
+      "date": "2026-01-08",
+      "date_raw": "08/01/2026",
+      "type": "VIREMENT",
+      "description": "Klemin Ivan Virement Nickel FR7616598000014000117403726",
+      "amount_cents": -400,
+      "amount_eur": "-4.00",
+      "amount_raw": "-4,00 €"
+    },
+    {
+      "number": 28,
+      "date": "2026-01-08",
+      "date_raw": "08/01/2026",
+      "type": "VIREMENT",
+      "description": "TATIANA KLEMINA Virement Nickel FR7616598000014000065834064",
+      "amount_cents": -1200,
+      "amount_eur": "-12.00",
+      "amount_raw": "-12,00 €"
+    },
+    {
+      "number": 29,
+      "date": "2026-01-08",
+      "date_raw": "08/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -2934,
+      "amount_eur": "-29.34",
+      "amount_raw": "-29,34 €"
+    },
+    {
+      "number": 30,
+      "date": "2026-01-08",
+      "date_raw": "08/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -10354,
+      "amount_eur": "-103.54",
+      "amount_raw": "-103,54 €"
+    },
+    {
+      "number": 31,
+      "date": "2026-01-11",
+      "date_raw": "11/01/2026",
+      "type": "ACHAT",
+      "description": "AUCHAN 0023M VILLENEUVE D",
+      "amount_cents": -6812,
+      "amount_eur": "-68.12",
+      "amount_raw": "-68,12 €"
+    },
+    {
+      "number": 32,
+      "date": "2026-01-12",
+      "date_raw": "12/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -4682,
+      "amount_eur": "-46.82",
+      "amount_raw": "-46,82 €"
+    },
+    {
+      "number": 33,
+      "date": "2026-01-12",
+      "date_raw": "12/01/2026",
+      "type": "ACHAT",
+      "description": "JARD FERM SC VILLENEUVE D",
+      "amount_cents": -795,
+      "amount_eur": "-7.95",
+      "amount_raw": "-7,95 €"
+    },
+    {
+      "number": 34,
+      "date": "2026-01-12",
+      "date_raw": "12/01/2026",
+      "type": "VIREMENT",
+      "description": "Guillaume LE JAN Virement Nickel FR7630003021200005034043109",
+      "amount_cents": -113200,
+      "amount_eur": "-1132.00",
+      "amount_raw": "-1132,00 €"
+    },
+    {
+      "number": 35,
+      "date": "2026-01-12",
+      "date_raw": "12/01/2026",
+      "type": "VIREMENT",
+      "description": "Klemin Ivan Virement Nickel FR7616598000014000117403726",
+      "amount_cents": -400,
+      "amount_eur": "-4.00",
+      "amount_raw": "-4,00 €"
+    },
+    {
+      "number": 36,
+      "date": "2026-01-12",
+      "date_raw": "12/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -2095,
+      "amount_eur": "-20.95",
+      "amount_raw": "-20,95 €"
+    },
+    {
+      "number": 37,
+      "date": "2026-01-12",
+      "date_raw": "12/01/2026",
+      "type": "ACHAT",
+      "description": "MGP*Vinted Vilnius",
+      "amount_cents": -2609,
+      "amount_eur": "-26.09",
+      "amount_raw": "-26,09 €"
+    },
+    {
+      "number": 38,
+      "date": "2026-01-12",
+      "date_raw": "12/01/2026",
+      "type": "ACHAT",
+      "description": "HAPPY CURL VILLENEUVE D'",
+      "amount_cents": -395,
+      "amount_eur": "-3.95",
+      "amount_raw": "-3,95 €"
+    },
+    {
+      "number": 39,
+      "date": "2026-01-13",
+      "date_raw": "13/01/2026",
+      "type": "VIREMENT",
+      "description": "Klemin Ivan Virement Nickel FR7616598000014000117403726",
+      "amount_cents": -400,
+      "amount_eur": "-4.00",
+      "amount_raw": "-4,00 €"
+    },
+    {
+      "number": 40,
+      "date": "2026-01-13",
+      "date_raw": "13/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -2856,
+      "amount_eur": "-28.56",
+      "amount_raw": "-28,56 €"
+    },
+    {
+      "number": 41,
+      "date": "2026-01-14",
+      "date_raw": "14/01/2026",
+      "type": "ACHAT",
+      "description": "LIDL VILLENEUVE D'",
+      "amount_cents": -3705,
+      "amount_eur": "-37.05",
+      "amount_raw": "-37,05 €"
+    },
+    {
+      "number": 42,
+      "date": "2026-01-14",
+      "date_raw": "14/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -416,
+      "amount_eur": "-4.16",
+      "amount_raw": "-4,16 €"
+    },
+    {
+      "number": 43,
+      "date": "2026-01-14",
+      "date_raw": "14/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -4179,
+      "amount_eur": "-41.79",
+      "amount_raw": "-41,79 €"
+    },
+    {
+      "number": 44,
+      "date": "2026-01-15",
+      "date_raw": "15/01/2026",
+      "type": "VIREMENT",
+      "description": "Klemin Ivan Virement Nickel FR7616598000014000117403726",
+      "amount_cents": -400,
+      "amount_eur": "-4.00",
+      "amount_raw": "-4,00 €"
+    },
+    {
+      "number": 45,
+      "date": "2026-01-15",
+      "date_raw": "15/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -275,
+      "amount_eur": "-2.75",
+      "amount_raw": "-2,75 €"
+    },
+    {
+      "number": 46,
+      "date": "2026-01-15",
+      "date_raw": "15/01/2026",
+      "type": "ACHAT",
+      "description": "COMMUNE DE LILLE LILLE",
+      "amount_cents": -300,
+      "amount_eur": "-3.00",
+      "amount_raw": "-3,00 €"
+    },
+    {
+      "number": 47,
+      "date": "2026-01-15",
+      "date_raw": "15/01/2026",
+      "type": "ACHAT",
+      "description": "MGP*Vinted Vilnius",
+      "amount_cents": -1314,
+      "amount_eur": "-13.14",
+      "amount_raw": "-13,14 €"
+    },
+    {
+      "number": 48,
+      "date": "2026-01-16",
+      "date_raw": "16/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -4550,
+      "amount_eur": "-45.50",
+      "amount_raw": "-45,50 €"
+    },
+    {
+      "number": 49,
+      "date": "2026-01-17",
+      "date_raw": "17/01/2026",
+      "type": "ACHAT",
+      "description": "LE LOVSTER LILLE",
+      "amount_cents": -650,
+      "amount_eur": "-6.50",
+      "amount_raw": "-6,50 €"
+    },
+    {
+      "number": 50,
+      "date": "2026-01-17",
+      "date_raw": "17/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -4808,
+      "amount_eur": "-48.08",
+      "amount_raw": "-48,08 €"
+    },
+    {
+      "number": 51,
+      "date": "2026-01-18",
+      "date_raw": "18/01/2026",
+      "type": "ACHAT",
+      "description": "AUCHAN 0023M VILLENEUVE D",
+      "amount_cents": -5918,
+      "amount_eur": "-59.18",
+      "amount_raw": "-59,18 €"
+    },
+    {
+      "number": 52,
+      "date": "2026-01-18",
+      "date_raw": "18/01/2026",
+      "type": "ACHAT",
+      "description": "ETAM-0336 VILLEN d'ASCQ",
+      "amount_cents": -1499,
+      "amount_eur": "-14.99",
+      "amount_raw": "-14,99 €"
+    },
+    {
+      "number": 53,
+      "date": "2026-01-19",
+      "date_raw": "19/01/2026",
+      "type": "VIREMENT",
+      "description": "Klemin Ivan Virement Nickel FR7616598000014000117403726",
+      "amount_cents": -400,
+      "amount_eur": "-4.00",
+      "amount_raw": "-4,00 €"
+    },
+    {
+      "number": 54,
+      "date": "2026-01-19",
+      "date_raw": "19/01/2026",
+      "type": "ACHAT",
+      "description": "JUL 0062 VILLENEUVE D",
+      "amount_cents": -1139,
+      "amount_eur": "-11.39",
+      "amount_raw": "-11,39 €"
+    },
+    {
+      "number": 55,
+      "date": "2026-01-19",
+      "date_raw": "19/01/2026",
+      "type": "ACHAT",
+      "description": "CARREFOUR MARKET VILLENEUVE D'",
+      "amount_cents": -8526,
+      "amount_eur": "-85.26",
+      "amount_raw": "-85,26 €"
+    },
+    {
+      "number": 56,
+      "date": "2026-01-19",
+      "date_raw": "19/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -970,
+      "amount_eur": "-9.70",
+      "amount_raw": "-9,70 €"
+    },
+    {
+      "number": 57,
+      "date": "2026-01-19",
+      "date_raw": "19/01/2026",
+      "type": "ACHAT",
+      "description": "AUCHAN 0023M VILLENEUVE D",
+      "amount_cents": -4887,
+      "amount_eur": "-48.87",
+      "amount_raw": "-48,87 €"
+    },
+    {
+      "number": 58,
+      "date": "2026-01-19",
+      "date_raw": "19/01/2026",
+      "type": "ACHAT",
+      "description": "MGP*Vinted Vilnius",
+      "amount_cents": 1314,
+      "amount_eur": "13.14",
+      "amount_raw": "13,14 €"
+    },
+    {
+      "number": 59,
+      "date": "2026-01-20",
+      "date_raw": "20/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -1960,
+      "amount_eur": "-19.60",
+      "amount_raw": "-19,60 €"
+    },
+    {
+      "number": 60,
+      "date": "2026-01-20",
+      "date_raw": "20/01/2026",
+      "type": "ACHAT",
+      "description": "MGP*Vinted Vilnius",
+      "amount_cents": -1549,
+      "amount_eur": "-15.49",
+      "amount_raw": "-15,49 €"
+    },
+    {
+      "number": 61,
+      "date": "2026-01-20",
+      "date_raw": "20/01/2026",
+      "type": "ACHAT",
+      "description": "MGP*Vinted Vilnius",
+      "amount_cents": -878,
+      "amount_eur": "-8.78",
+      "amount_raw": "-8,78 €"
+    },
+    {
+      "number": 62,
+      "date": "2026-01-20",
+      "date_raw": "20/01/2026",
+      "type": "PRELEVEMENT",
+      "description": "FREE MOBILE",
+      "amount_cents": -7197,
+      "amount_eur": "-71.97",
+      "amount_raw": "-71,97 €"
+    },
+    {
+      "number": 63,
+      "date": "2026-01-21",
+      "date_raw": "21/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -3326,
+      "amount_eur": "-33.26",
+      "amount_raw": "-33,26 €"
+    },
+    {
+      "number": 64,
+      "date": "2026-01-22",
+      "date_raw": "22/01/2026",
+      "type": "VIREMENT",
+      "description": "Klemin Ivan Virement Nickel FR7616598000014000117403726",
+      "amount_cents": -400,
+      "amount_eur": "-4.00",
+      "amount_raw": "-4,00 €"
+    },
+    {
+      "number": 65,
+      "date": "2026-01-22",
+      "date_raw": "22/01/2026",
+      "type": "VIREMENT",
+      "description": "Klemin Ivan Virement Nickel FR7616598000014000117403726",
+      "amount_cents": -100,
+      "amount_eur": "-1.00",
+      "amount_raw": "-1,00 €"
+    },
+    {
+      "number": 66,
+      "date": "2026-01-22",
+      "date_raw": "22/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -3408,
+      "amount_eur": "-34.08",
+      "amount_raw": "-34,08 €"
+    },
+    {
+      "number": 67,
+      "date": "2026-01-22",
+      "date_raw": "22/01/2026",
+      "type": "ACHAT",
+      "description": "COMMUNE DE LILLE LILLE",
+      "amount_cents": -300,
+      "amount_eur": "-3.00",
+      "amount_raw": "-3,00 €"
+    },
+    {
+      "number": 68,
+      "date": "2026-01-23",
+      "date_raw": "23/01/2026",
+      "type": "ACHAT",
+      "description": "MGP*Vinted Vilnius",
+      "amount_cents": -918,
+      "amount_eur": "-9.18",
+      "amount_raw": "-9,18 €"
+    },
+    {
+      "number": 69,
+      "date": "2026-01-23",
+      "date_raw": "23/01/2026",
+      "type": "ACHAT",
+      "description": "MIXMARKET WATTIGNIES",
+      "amount_cents": -5604,
+      "amount_eur": "-56.04",
+      "amount_raw": "-56,04 €"
+    },
+    {
+      "number": 70,
+      "date": "2026-01-23",
+      "date_raw": "23/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -3487,
+      "amount_eur": "-34.87",
+      "amount_raw": "-34,87 €"
+    },
+    {
+      "number": 71,
+      "date": "2026-01-24",
+      "date_raw": "24/01/2026",
+      "type": "ACHAT",
+      "description": "MGP*Vinted Vilnius",
+      "amount_cents": -2084,
+      "amount_eur": "-20.84",
+      "amount_raw": "-20,84 €"
+    },
+    {
+      "number": 72,
+      "date": "2026-01-24",
+      "date_raw": "24/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -3315,
+      "amount_eur": "-33.15",
+      "amount_raw": "-33,15 €"
+    },
+    {
+      "number": 73,
+      "date": "2026-01-25",
+      "date_raw": "25/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -1533,
+      "amount_eur": "-15.33",
+      "amount_raw": "-15,33 €"
+    },
+    {
+      "number": 74,
+      "date": "2026-01-25",
+      "date_raw": "25/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -2934,
+      "amount_eur": "-29.34",
+      "amount_raw": "-29,34 €"
+    },
+    {
+      "number": 75,
+      "date": "2026-01-25",
+      "date_raw": "25/01/2026",
+      "type": "PRELEVEMENT",
+      "description": "Engie Mandat 00S018571238",
+      "amount_cents": -19352,
+      "amount_eur": "-193.52",
+      "amount_raw": "-193,52 €"
+    },
+    {
+      "number": 76,
+      "date": "2026-01-26",
+      "date_raw": "26/01/2026",
+      "type": "VIREMENT",
+      "description": "Klemin Ivan Virement Nickel FR7616598000014000117403726",
+      "amount_cents": -100,
+      "amount_eur": "-1.00",
+      "amount_raw": "-1,00 €"
+    },
+    {
+      "number": 77,
+      "date": "2026-01-26",
+      "date_raw": "26/01/2026",
+      "type": "ACHAT",
+      "description": "BM VILL ASCQ VILLENEUVE D",
+      "amount_cents": -724,
+      "amount_eur": "-7.24",
+      "amount_raw": "-7,24 €"
+    },
+    {
+      "number": 78,
+      "date": "2026-01-26",
+      "date_raw": "26/01/2026",
+      "type": "ACHAT",
+      "description": "BOUCHERIE DE L O VILLENEUVE D",
+      "amount_cents": -1376,
+      "amount_eur": "-13.76",
+      "amount_raw": "-13,76 €"
+    },
+    {
+      "number": 79,
+      "date": "2026-01-26",
+      "date_raw": "26/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -3049,
+      "amount_eur": "-30.49",
+      "amount_raw": "-30,49 €"
+    },
+    {
+      "number": 80,
+      "date": "2026-01-27",
+      "date_raw": "27/01/2026",
+      "type": "VIREMENT",
+      "description": "Klemin Ivan Virement Nickel FR7616598000014000117403726",
+      "amount_cents": -400,
+      "amount_eur": "-4.00",
+      "amount_raw": "-4,00 €"
+    },
+    {
+      "number": 81,
+      "date": "2026-01-27",
+      "date_raw": "27/01/2026",
+      "type": "VIREMENT",
+      "description": "HORIBA JOBIN YVON HORIBA FRANCE SAS FR7630066109470002022550282",
+      "amount_cents": 362847,
+      "amount_eur": "3628.47",
+      "amount_raw": "3628,47 €"
+    },
+    {
+      "number": 82,
+      "date": "2026-01-27",
+      "date_raw": "27/01/2026",
+      "type": "ACHAT",
+      "description": "NYX*LILLEAUTOMATIQUEDI Wambrechies",
+      "amount_cents": -110,
+      "amount_eur": "-1.10",
+      "amount_raw": "-1,10 €"
+    },
+    {
+      "number": 83,
+      "date": "2026-01-27",
+      "date_raw": "27/01/2026",
+      "type": "ACHAT",
+      "description": "PAYPAL *SHENDUQRWEA 18658850911",
+      "amount_cents": -942,
+      "amount_eur": "-9.42",
+      "amount_raw": "-9,42 €"
+    },
+    {
+      "number": 84,
+      "date": "2026-01-27",
+      "date_raw": "27/01/2026",
+      "type": "ACHAT",
+      "description": "MGP*Vinted Vilnius",
+      "amount_cents": -1589,
+      "amount_eur": "-15.89",
+      "amount_raw": "-15,89 €"
+    },
+    {
+      "number": 85,
+      "date": "2026-01-27",
+      "date_raw": "27/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -4676,
+      "amount_eur": "-46.76",
+      "amount_raw": "-46,76 €"
+    },
+    {
+      "number": 86,
+      "date": "2026-01-27",
+      "date_raw": "27/01/2026",
+      "type": "ACHAT",
+      "description": "LIBIER LOUISE LILLE",
+      "amount_cents": -1800,
+      "amount_eur": "-18.00",
+      "amount_raw": "-18,00 €"
+    },
+    {
+      "number": 87,
+      "date": "2026-01-27",
+      "date_raw": "27/01/2026",
+      "type": "ACHAT",
+      "description": "NYX*LILLEAUTOMATIQUEDI Wambrechies",
+      "amount_cents": -50,
+      "amount_eur": "-0.50",
+      "amount_raw": "-0,50 €"
+    },
+    {
+      "number": 88,
+      "date": "2026-01-27",
+      "date_raw": "27/01/2026",
+      "type": "ACHAT",
+      "description": "AUCHAN 0023M VILLENEUVE D",
+      "amount_cents": -3859,
+      "amount_eur": "-38.59",
+      "amount_raw": "-38,59 €"
+    },
+    {
+      "number": 89,
+      "date": "2026-01-27",
+      "date_raw": "27/01/2026",
+      "type": "ACHAT",
+      "description": "LECLERC LILLENI LILLE",
+      "amount_cents": -1045,
+      "amount_eur": "-10.45",
+      "amount_raw": "-10,45 €"
+    },
+    {
+      "number": 90,
+      "date": "2026-01-27",
+      "date_raw": "27/01/2026",
+      "type": "ACHAT",
+      "description": "MGP*Vinted Vilnius",
+      "amount_cents": 878,
+      "amount_eur": "8.78",
+      "amount_raw": "8,78 €"
+    },
+    {
+      "number": 91,
+      "date": "2026-01-27",
+      "date_raw": "27/01/2026",
+      "type": "ACHAT",
+      "description": "COMMUNE DE LILLE LILLE",
+      "amount_cents": -300,
+      "amount_eur": "-3.00",
+      "amount_raw": "-3,00 €"
+    },
+    {
+      "number": 92,
+      "date": "2026-01-28",
+      "date_raw": "28/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -2591,
+      "amount_eur": "-25.91",
+      "amount_raw": "-25,91 €"
+    },
+    {
+      "number": 93,
+      "date": "2026-01-28",
+      "date_raw": "28/01/2026",
+      "type": "ACHAT",
+      "description": "COMMUNE DE LILLE LILLE",
+      "amount_cents": -200,
+      "amount_eur": "-2.00",
+      "amount_raw": "-2,00 €"
+    },
+    {
+      "number": 94,
+      "date": "2026-01-29",
+      "date_raw": "29/01/2026",
+      "type": "VIREMENT",
+      "description": "LYCEE GENERAL ET TECHNOLOGIQUE CESAR BAGGIO RESTAURATION/HEBER GEMENT T 1 FR7610071590000000101796833",
+      "amount_cents": -22032,
+      "amount_eur": "-220.32",
+      "amount_raw": "-220,32 €"
+    },
+    {
+      "number": 95,
+      "date": "2026-01-29",
+      "date_raw": "29/01/2026",
+      "type": "ACHAT",
+      "description": "PHARMACIE DU HE VILLENEUVE D'",
+      "amount_cents": -1190,
+      "amount_eur": "-11.90",
+      "amount_raw": "-11,90 €"
+    },
+    {
+      "number": 96,
+      "date": "2026-01-29",
+      "date_raw": "29/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -3187,
+      "amount_eur": "-31.87",
+      "amount_raw": "-31,87 €"
+    },
+    {
+      "number": 97,
+      "date": "2026-01-29",
+      "date_raw": "29/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -3313,
+      "amount_eur": "-33.13",
+      "amount_raw": "-33,13 €"
+    },
+    {
+      "number": 98,
+      "date": "2026-01-29",
+      "date_raw": "29/01/2026",
+      "type": "ACHAT",
+      "description": "COMMUNE DE LILLE LILLE",
+      "amount_cents": -300,
+      "amount_eur": "-3.00",
+      "amount_raw": "-3,00 €"
+    },
+    {
+      "number": 99,
+      "date": "2026-01-30",
+      "date_raw": "30/01/2026",
+      "type": "VIREMENT",
+      "description": "Klemin Ivan Virement Nickel FR7616598000014000117403726",
+      "amount_cents": -400,
+      "amount_eur": "-4.00",
+      "amount_raw": "-4,00 €"
+    },
+    {
+      "number": 100,
+      "date": "2026-01-30",
+      "date_raw": "30/01/2026",
+      "type": "ACHAT",
+      "description": "BL VILLENEUVE D' VILLENEUVE D'",
+      "amount_cents": -1152,
+      "amount_eur": "-11.52",
+      "amount_raw": "-11,52 €"
+    },
+    {
+      "number": 101,
+      "date": "2026-01-30",
+      "date_raw": "30/01/2026",
+      "type": "ACHAT",
+      "description": "PAYPAL *tricvicky 4029357733",
+      "amount_cents": -12000,
+      "amount_eur": "-120.00",
+      "amount_raw": "-120,00 €"
+    },
+    {
+      "number": 102,
+      "date": "2026-01-30",
+      "date_raw": "30/01/2026",
+      "type": "ACHAT",
+      "description": "SC.FRANPRIX PARIS",
+      "amount_cents": -1297,
+      "amount_eur": "-12.97",
+      "amount_raw": "-12,97 €"
+    },
+    {
+      "number": 103,
+      "date": "2026-01-30",
+      "date_raw": "30/01/2026",
+      "type": "ACHAT",
+      "description": "STATION AVIA SAINT LEGER",
+      "amount_cents": -3000,
+      "amount_eur": "-30.00",
+      "amount_raw": "-30,00 €"
+    },
+    {
+      "number": 104,
+      "date": "2026-01-30",
+      "date_raw": "30/01/2026",
+      "type": "ACHAT",
+      "description": "SAEMES MONTHOLON PARIS",
+      "amount_cents": -1380,
+      "amount_eur": "-13.80",
+      "amount_raw": "-13,80 €"
+    },
+    {
+      "number": 105,
+      "date": "2026-01-30",
+      "date_raw": "30/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -4600,
+      "amount_eur": "-46.00",
+      "amount_raw": "-46,00 €"
+    },
+    {
+      "number": 106,
+      "date": "2026-01-30",
+      "date_raw": "30/01/2026",
+      "type": "ACHAT",
+      "description": "MC DONALD CADET PARIS",
+      "amount_cents": -620,
+      "amount_eur": "-6.20",
+      "amount_raw": "-6,20 €"
+    },
+    {
+      "number": 107,
+      "date": "2026-01-31",
+      "date_raw": "31/01/2026",
+      "type": "ACHAT",
+      "description": "MATCH VILLENEUVE D'",
+      "amount_cents": -3163,
+      "amount_eur": "-31.63",
+      "amount_raw": "-31,63 €"
+    },
+    {
+      "number": 108,
+      "date": "2026-01-31",
+      "date_raw": "31/01/2026",
+      "type": "ACHAT",
+      "description": "AUTOGRILL RESSONS SUR M",
+      "amount_cents": -1120,
+      "amount_eur": "-11.20",
+      "amount_raw": "-11,20 €"
+    },
+    {
+      "number": 109,
+      "date": "2026-01-31",
+      "date_raw": "31/01/2026",
+      "type": "ACHAT",
+      "description": "TOTAL RESSONS SUR M",
+      "amount_cents": -3600,
+      "amount_eur": "-36.00",
+      "amount_raw": "-36,00 €"
+    }
+  ]
+}
