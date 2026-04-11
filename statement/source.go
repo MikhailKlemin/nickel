@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func Read(path string, ctx context.Context) (string, error) {
+func Read(ctx context.Context, path string) (string, error) {
 	if strings.EqualFold(filepath.Ext(path), ".txt") {
 		return ReadTextFile(path)
 	}
@@ -41,7 +41,7 @@ func ExtractText(ctx context.Context, pdfPath string) (string, error) {
 }
 
 func ParseFile(ctx context.Context, path string, logger anyLogger) (ParsedStatement, error) {
-	text, err := Read(path, ctx)
+	text, err := Read(ctx, path)
 	if err != nil {
 		return ParsedStatement{}, fmt.Errorf("read statement: %w", err)
 	}
