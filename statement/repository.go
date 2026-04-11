@@ -64,16 +64,21 @@ func InsertTransactions(ctx context.Context, pool *pgxpool.Pool, records []Trans
 	}
 
 	results := pool.SendBatch(ctx, batch)
-	defer results.Close()
 
-	// Use for range over records (not len(records))
+	// Process each batch result
 	for range records {
 		_, err := results.Exec()
 		if err != nil {
+			// Close batch on error and combine errors
+			closeErr := results.Close()
+			if closeErr != nil {
+				return errors.Join(fmt.Errorf("batch insert transaction: %w", err), closeErr)
+			}
 			return fmt.Errorf("batch insert transaction: %w", err)
 		}
 	}
 
+	// Close batch and check for any errors
 	if err := results.Close(); err != nil {
 		return fmt.Errorf("close batch: %w", err)
 	}
