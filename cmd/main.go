@@ -1,66 +1,97 @@
+//go:build go1.25
+
 package main
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"log/slog"
 	"os"
+	"time"
 
 	"nickel/statement"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func run(ctx context.Context, args []string, logger *slog.Logger) error {
-	fs := flag.NewFlagSet("parse-nickel-statement", flag.ContinueOnError)
+	fs := flag.NewFlagSet("nickel-import", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 
-	outputPath := fs.String("output", "", "write JSON output to file instead of stdout")
+	filePath := fs.String("file", "", "path to statement file (PDF or TXT)")
+	dsn := fs.String("dsn", "", "PostgreSQL connection string (or use DATABASE_URL env var)")
 
 	if err := fs.Parse(args[1:]); err != nil {
 		return err
 	}
 
-	rest := fs.Args()
-	if len(rest) < 1 || len(rest) > 2 {
-		return fmt.Errorf("usage: parse-nickel-statement [-output result.json] <statement.pdf|statement.txt> [result.json]")
+	// Validate required flags
+	if *filePath == "" {
+		return fmt.Errorf("missing required flag -file")
 	}
 
-	inputPath := rest[0]
-
-	if *outputPath == "" && len(rest) == 2 {
-		*outputPath = rest[1]
-	}
-
-	stmt, err := statement.ParseFile(ctx, inputPath, logger)
-	if err != nil {
-		return err
-	}
-
-	var w io.Writer = os.Stdout
-	var file *os.File
-
-	if *outputPath != "" {
-		file, err = os.Create(*outputPath)
-		if err != nil {
-			return fmt.Errorf("create output file %q: %w", *outputPath, err)
+	if *dsn == "" {
+		*dsn = os.Getenv("DATABASE_URL")
+		if *dsn == "" {
+			return fmt.Errorf("missing DSN: use -dsn flag or DATABASE_URL environment variable")
 		}
-		defer file.Close()
-		w = file
 	}
 
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	if err := enc.Encode(stmt); err != nil {
-		return fmt.Errorf("encode JSON: %w", err)
+	// Parse statement file
+	logger.Info("parsing statement file", "path", *filePath)
+	parsedStmt, err := statement.ParseFile(ctx, *filePath, logger)
+	if err != nil {
+		return fmt.Errorf("parse file: %w", err)
 	}
+
+	// Open database connection
+	logger.Info("connecting to database")
+	pool, err := pgxpool.New(ctx, *dsn)
+	if err != nil {
+		return fmt.Errorf("connect to database: %w", err)
+	}
+	defer pool.Close()
+
+	// Map to storage record
+	rec, err := statement.MapToStatementRecord(&parsedStmt, time.Now())
+	if err != nil {
+		return fmt.Errorf("map statement record: %w", err)
+	}
+
+	// Insert statement
+	logger.Info("inserting statement record", "period", rec.Period, "iban", rec.IBAN)
+	statementID, err := statement.InsertStatement(ctx, pool, rec)
+	if err != nil {
+		if errors.Is(err, statement.ErrStatementExists) {
+			logger.Info("statement already imported, skipping", "period", rec.Period, "iban", rec.IBAN)
+			return nil
+		}
+		return fmt.Errorf("insert statement: %w", err)
+	}
+
+	// Map and insert transactions
+	transactionRecords := statement.MapToTransactionRecords(statementID, parsedStmt.Transactions)
+	
+	logger.Info("inserting transactions", "count", len(transactionRecords), "statement_id", statementID)
+	if err := statement.InsertTransactions(ctx, pool, transactionRecords); err != nil {
+		return fmt.Errorf("insert transactions: %w", err)
+	}
+
+	logger.Info("import completed",
+		"statement_id", statementID,
+		"transactions", len(transactionRecords),
+		"period", rec.Period,
+		"iban", rec.IBAN,
+	)
 
 	return nil
 }
 
 func main() {
-	logger := slog.Default()
+	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
 
 	if err := run(context.Background(), os.Args, logger); err != nil {
 		logger.Error("fatal", "err", err)
