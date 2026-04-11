@@ -404,11 +404,3 @@ func parseAmountCents(raw string) (int64, error) {
 	return sign * (euros*100 + cents), nil
 }
 
-func formatAmountEuro(cents int64) string {
-	sign := ""
-	if cents < 0 {
-		sign = "-"
-		cents = -cents
-	}
-	return fmt.Sprintf("%s%d.%02d", sign, cents/100, cents%100)
-}
