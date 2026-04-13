@@ -19,10 +19,9 @@ func respondJSON(w http.ResponseWriter, status int, v any) {
 	w.WriteHeader(status)
 	
 	encoder := json.NewEncoder(w)
-	if err := encoder.Encode(v); err != nil {
-		// Log the error - can't change response after WriteHeader
-		slog.Error("failed to encode JSON response", "err", err)
-	}
+	// If JSON encoding fails after WriteHeader, we cannot change the response.
+	// The error is discarded because there is no practical recovery.
+	_ = encoder.Encode(v)
 }
 
 func respondError(w http.ResponseWriter, status int, code, message string) {
