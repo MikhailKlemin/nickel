@@ -27,9 +27,6 @@ var allowedExtensions = map[string]bool{
 }
 
 func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
-	// Enforce a hard body limit before the multipart parser buffers anything.
-	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
-
 	if err := r.ParseMultipartForm(maxUploadBytes); err != nil {
 		respondError(w, http.StatusRequestEntityTooLarge, "PAYLOAD_TOO_LARGE", "file exceeds the 32 MiB limit")
 		return

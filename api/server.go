@@ -82,19 +82,6 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /v1/analytics/summary", s.handleAnalyticsSummary)
 }
 
-// limitBodySize middleware limits the request body size for POST, PUT, PATCH requests
-func limitBodySize(maxBytes int64) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Only limit body size for methods that typically have bodies
-			if r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch {
-				r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
-			}
-			next.ServeHTTP(w, r)
-		})
-	}
-}
-
 // Handler wraps the internal mux with middleware and returns the final
 // http.Handler that the server entrypoint passes to http.ListenAndServe.
 //
@@ -102,13 +89,11 @@ func limitBodySize(maxBytes int64) func(http.Handler) http.Handler {
 // first, then logging, then reaches the mux.  This means the logger
 // always captures the final status code even when a panic is recovered.
 //
-//	request → recovery → logging → limitBodySize → mux → handler
+//	request → recovery → logging → mux → handler
 func (s *Server) Handler() http.Handler {
 	return recovery(s.logger,
 		logging(s.logger,
-			limitBodySize(10*1024*1024)( // 10MB limit
-				s.mux,
-			),
+			s.mux,
 		),
 	)
 }

@@ -34,6 +34,8 @@ func respondError(w http.ResponseWriter, status int, code, message string) {
 // and returns a generic error message safe to forward to API consumers
 // (internal field names are never leaked).
 func decodeJSON(r *http.Request, v any) error {
+	// Limit JSON body to 1MB to prevent large payloads
+	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20) // 1MB
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(v); err != nil {
