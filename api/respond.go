@@ -4,7 +4,7 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -23,13 +23,27 @@ func respondError(w http.ResponseWriter, status int, code, message string) {
 	respondJSON(w, status, errorBody{Code: code, Message: message})
 }
 
-// decodeJSON reads the request body into v.
-// Returns a user-friendly error safe to send in a 400 response.
+// decodeJSON reads exactly one JSON value from the request body into v.
+// It rejects unknown fields and trailing content after the first value,
+// and returns a generic error message safe to forward to API consumers
+// (internal field names are never leaked).
 func decodeJSON(r *http.Request, v any) error {
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(v); err != nil {
-		return fmt.Errorf("invalid JSON: %w", err)
+		return errInvalidBody
+	}
+	// Reject trailing tokens: {"category":"Food"}{"extra":"junk"}
+	if err := dec.Decode(&json.RawMessage{}); err != io.EOF {
+		return errInvalidBody
 	}
 	return nil
 }
+
+// errInvalidBody is the single user-facing error for any JSON decode problem.
+// Using a package-level value avoids allocating a new error on every bad request.
+var errInvalidBody = &staticError{"invalid request body"}
+
+type staticError struct{ msg string }
+
+func (e *staticError) Error() string { return e.msg }

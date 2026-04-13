@@ -1,3 +1,5 @@
+//go:build go1.25
+
 package statement
 
 import (
@@ -11,10 +13,45 @@ import (
 
 var ErrStatementExists = errors.New("statement already exists for this period")
 
-// InsertStatement inserts a StatementRecord into the database and returns its ID.
-// If a statement with the same period and IBAN already exists, it returns
-// the existing statement's ID along with ErrStatementExists.
-func InsertStatement(ctx context.Context, pool *pgxpool.Pool, rec *StatementRecord) (int64, error) {
+// ImportResult is returned by ImportStatement and carries the statement ID
+// together with any soft warnings that did not prevent the import.
+type ImportResult struct {
+	StatementID     int64
+	SkippedTxBlocks int // number of transaction blocks the parser could not parse
+}
+
+// ImportStatement inserts the statement row and all its transactions in a
+// single database transaction, so the database is never left with a statement
+// row that has no (or partial) transactions.
+//
+// If a statement with the same (period, iban) already exists, the function
+// returns ErrStatementExists without modifying any data.
+func ImportStatement(ctx context.Context, pool *pgxpool.Pool, rec *StatementRecord, txRecords []TransactionRecord) (ImportResult, error) {
+	var result ImportResult
+
+	err := pgx.BeginTxFunc(ctx, pool, pgx.TxOptions{}, func(tx pgx.Tx) error {
+		id, err := insertStatementTx(ctx, tx, rec)
+		if err != nil {
+			return err // includes ErrStatementExists; tx rolls back automatically
+		}
+		result.StatementID = id
+
+		// Stamp every record with the real DB id now that we have it.
+		for i := range txRecords {
+			txRecords[i].StatementID = id
+		}
+
+		return insertTransactionsTx(ctx, tx, txRecords)
+	})
+	if err != nil {
+		return ImportResult{}, err
+	}
+
+	return result, nil
+}
+
+// insertStatementTx runs the statement upsert inside an existing transaction.
+func insertStatementTx(ctx context.Context, tx pgx.Tx, rec *StatementRecord) (int64, error) {
 	const insertSQL = `
 		INSERT INTO statements (period, iban, uploaded_at)
 		VALUES ($1, $2, $3)
@@ -23,29 +60,33 @@ func InsertStatement(ctx context.Context, pool *pgxpool.Pool, rec *StatementReco
 	`
 
 	var id int64
-	err := pool.QueryRow(ctx, insertSQL, rec.Period, rec.IBAN, rec.UploadedAt).Scan(&id)
+	err := tx.QueryRow(ctx, insertSQL, rec.Period, rec.IBAN, rec.UploadedAt).Scan(&id)
 	if err == nil {
 		return id, nil
 	}
 
 	if errors.Is(err, pgx.ErrNoRows) {
-		// Conflict occurred, fetch existing ID
+		// Conflict: a statement for this period+IBAN already exists.
+		// Fetch its id so the caller can surface a meaningful error.
 		const selectSQL = `SELECT id FROM statements WHERE period = $1 AND iban = $2`
-		if err := pool.QueryRow(ctx, selectSQL, rec.Period, rec.IBAN).Scan(&id); err != nil {
-			return 0, fmt.Errorf("fetch existing statement ID: %w", err)
+		if err := tx.QueryRow(ctx, selectSQL, rec.Period, rec.IBAN).Scan(&id); err != nil {
+			return 0, fmt.Errorf("fetch existing statement id: %w", err)
 		}
-		return id, ErrStatementExists
+		return 0, fmt.Errorf("%w (id %d)", ErrStatementExists, id)
 	}
 
 	return 0, fmt.Errorf("insert statement: %w", err)
 }
 
-// InsertTransactions inserts multiple TransactionRecords in a single batch.
-// Conflicts on (statement_id, transaction_number) are ignored (DO NOTHING).
-func InsertTransactions(ctx context.Context, pool *pgxpool.Pool, records []TransactionRecord) error {
+// insertTransactionsTx bulk-inserts transaction records inside an existing
+// transaction using a pgx pipeline batch.
+// Conflicts on (statement_id, transaction_number) are silently ignored so
+// that re-importing an already-stored statement is idempotent.
+func insertTransactionsTx(ctx context.Context, tx pgx.Tx, records []TransactionRecord) error {
 	if len(records) == 0 {
 		return nil
 	}
+
 	const insertSQL = `
 		INSERT INTO transactions (
 			statement_id, transaction_number, date, type, description, amount_cents, category
@@ -66,22 +107,15 @@ func InsertTransactions(ctx context.Context, pool *pgxpool.Pool, records []Trans
 		)
 	}
 
-	results := pool.SendBatch(ctx, batch)
+	results := tx.SendBatch(ctx, batch)
 
-	// Process each batch result
 	for range records {
-		_, err := results.Exec()
-		if err != nil {
-			// Close batch on error and combine errors
+		if _, err := results.Exec(); err != nil {
 			closeErr := results.Close()
-			if closeErr != nil {
-				return errors.Join(fmt.Errorf("batch insert transaction: %w", err), closeErr)
-			}
-			return fmt.Errorf("batch insert transaction: %w", err)
+			return errors.Join(fmt.Errorf("batch insert transaction: %w", err), closeErr)
 		}
 	}
 
-	// Close batch and check for any errors
 	if err := results.Close(); err != nil {
 		return fmt.Errorf("close batch: %w", err)
 	}

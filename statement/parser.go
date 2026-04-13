@@ -54,19 +54,20 @@ type rawBlock struct {
 func Parse(text string, logger anyLogger) (ParsedStatement, error) {
 	holder, accNum, iban, bic, from, to := parseHeader(text)
 
-	transactions, err := parseTransactions(text, logger)
+	transactions, skipped, err := parseTransactions(text, logger)
 	if err != nil {
 		return ParsedStatement{}, fmt.Errorf("parse transactions: %w", err)
 	}
 
 	return ParsedStatement{
-		AccountHolder: holder,
-		AccountNumber: accNum,
-		IBAN:          iban,
-		BIC:           bic,
-		PeriodFrom:    from,
-		PeriodTo:      to,
-		Transactions:  transactions,
+		AccountHolder:   holder,
+		AccountNumber:   accNum,
+		IBAN:            iban,
+		BIC:             bic,
+		PeriodFrom:      from,
+		PeriodTo:        to,
+		Transactions:    transactions,
+		SkippedTxBlocks: skipped,
 	}, nil
 }
 
@@ -321,29 +322,30 @@ func parseMainLine(line string) (ParsedTransaction, bool, error) {
 	return ParsedTransaction{}, false, nil
 }
 
-func parseTransactions(text string, logger anyLogger) ([]ParsedTransaction, error) {
+func parseTransactions(text string, logger anyLogger) (txs []ParsedTransaction, skipped int, err error) {
 	rawTransactions, err := SplitTransactions(text)
 	if err != nil {
-		return nil, fmt.Errorf("split transactions: %w", err)
+		return nil, 0, fmt.Errorf("split transactions: %w", err)
 	}
 
-	txs := make([]ParsedTransaction, 0, len(rawTransactions))
+	txs = make([]ParsedTransaction, 0, len(rawTransactions))
 	for _, raw := range rawTransactions {
-		tx, err := ParseTransaction(raw)
-		if err != nil {
+		tx, parseErr := ParseTransaction(raw)
+		if parseErr != nil {
+			skipped++
 			if logger != nil {
 				preview := normalizeWhitespace(raw)
 				if len(preview) > 180 {
 					preview = preview[:180] + "..."
 				}
-				logger.Warn("skipping malformed transaction block", slog.String("err", err.Error()), slog.String("preview", preview))
+				logger.Warn("skipping malformed transaction block", slog.String("err", parseErr.Error()), slog.String("preview", preview))
 			}
 			continue
 		}
 		txs = append(txs, tx)
 	}
 
-	return txs, nil
+	return txs, skipped, nil
 }
 
 func normalizeWhitespace(s string) string {
@@ -403,4 +405,3 @@ func parseAmountCents(raw string) (int64, error) {
 
 	return sign * (euros*100 + cents), nil
 }
-

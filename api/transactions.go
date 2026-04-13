@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"nickel/statement"
@@ -35,6 +36,16 @@ func (s *Server) handlePatchCategory(w http.ResponseWriter, r *http.Request) {
 	if err := decodeJSON(r, &body); err != nil {
 		respondError(w, http.StatusBadRequest, "BAD_REQUEST", err.Error())
 		return
+	}
+
+	// Normalize whitespace-only strings to nil so the DB never stores "".
+	if body.Category != nil {
+		trimmed := strings.TrimSpace(*body.Category)
+		if trimmed == "" {
+			body.Category = nil
+		} else {
+			body.Category = &trimmed
+		}
 	}
 
 	if err := statement.UpdateTransactionCategory(r.Context(), s.pool, id, body.Category); err != nil {

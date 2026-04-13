@@ -80,13 +80,26 @@ func queryMonthlyBreakdown(ctx context.Context, pool *pgxpool.Pool, periodFrom, 
 	return results, rows.Err()
 }
 
-// queryGroupedTotals returns a map of column-value → absolute sum of amount_cents.
+// queryGroupedTotals returns a map of column-value → total debit spend in cents.
+// Only negative amounts (debits) are summed so that credits and reimbursements
+// do not inflate the totals.
 // col must be one of the declared groupColumn constants — the type prevents
 // arbitrary SQL interpolation at compile time.
 func queryGroupedTotals(ctx context.Context, pool *pgxpool.Pool, col groupColumn, periodFrom, periodTo string) (map[string]int64, error) {
-	where, args := periodWhere("TO_CHAR(t.date, 'YYYY-MM')", periodFrom, periodTo)
+	// t.amount_cents < 0 is always the base condition. Period bounds, if
+	// present, are appended as additional AND clauses via periodWhere.
+	periodClause, args := periodWhere("TO_CHAR(t.date, 'YYYY-MM')", periodFrom, periodTo)
 
-	// COALESCE maps NULL categories to the sentinel string "uncategorized"
+	var where string
+	if periodClause == "" {
+		where = "WHERE t.amount_cents < 0"
+	} else {
+		// periodClause is "WHERE <cond> [AND <cond>]"; strip the keyword and
+		// append to our own WHERE so there is exactly one WHERE in the query.
+		where = "WHERE t.amount_cents < 0 AND " + strings.TrimPrefix(periodClause, "WHERE ")
+	}
+
+	// COALESCE maps NULL categories to the sentinel "uncategorized"
 	// so the JSON map never has a null key.
 	query := fmt.Sprintf(`
 		SELECT

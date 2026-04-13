@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"nickel/statement"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -53,34 +54,35 @@ func run(ctx context.Context, args []string, logger *slog.Logger) error {
 	}
 	defer pool.Close()
 
-	// Map to storage record
+	// Map to storage records
 	rec, err := statement.MapToStatementRecord(&parsedStmt, time.Now())
 	if err != nil {
 		return fmt.Errorf("map statement record: %w", err)
 	}
+	txRecords := statement.MapToTransactionRecords(0, parsedStmt.Transactions) // StatementID stamped inside ImportStatement
 
-	// Insert statement
-	logger.Info("inserting statement record", "period", rec.Period, "iban", rec.IBAN)
-	statementID, err := statement.InsertStatement(ctx, pool, rec)
+	// Import atomically: statement row + transactions in one DB transaction.
+	logger.Info("importing statement", "period", rec.Period, "iban", rec.IBAN, "transactions", len(txRecords))
+	result, err := statement.ImportStatement(ctx, pool, rec, txRecords)
 	if err != nil {
 		if errors.Is(err, statement.ErrStatementExists) {
 			logger.Info("statement already imported, skipping", "period", rec.Period, "iban", rec.IBAN)
 			return nil
 		}
-		return fmt.Errorf("insert statement: %w", err)
+		return fmt.Errorf("import statement: %w", err)
 	}
 
-	// Map and insert transactions
-	transactionRecords := statement.MapToTransactionRecords(statementID, parsedStmt.Transactions)
-	
-	logger.Info("inserting transactions", "count", len(transactionRecords), "statement_id", statementID)
-	if err := statement.InsertTransactions(ctx, pool, transactionRecords); err != nil {
-		return fmt.Errorf("insert transactions: %w", err)
+	if parsedStmt.SkippedTxBlocks > 0 {
+		logger.Warn("some transaction blocks could not be parsed and were skipped",
+			"skipped", parsedStmt.SkippedTxBlocks,
+			"imported", len(txRecords),
+		)
 	}
 
 	logger.Info("import completed",
-		"statement_id", statementID,
-		"transactions", len(transactionRecords),
+		"statement_id", result.StatementID,
+		"transactions", len(txRecords),
+		"skipped", parsedStmt.SkippedTxBlocks,
 		"period", rec.Period,
 		"iban", rec.IBAN,
 	)
