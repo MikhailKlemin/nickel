@@ -34,8 +34,7 @@ func MapToStatementRecord(ps *ParsedStatement, uploadedAt time.Time) (*Statement
 func MapToTransactionRecords(statementID int64, transactions []ParsedTransaction) []TransactionRecord {
 	records := make([]TransactionRecord, len(transactions))
 	
-	for i := range transactions {
-		pt := transactions[i]
+	for i, pt := range transactions {
 		records[i] = TransactionRecord{
 			StatementID:       statementID,
 			TransactionNumber: pt.Number,
