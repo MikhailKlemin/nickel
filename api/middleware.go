@@ -3,6 +3,7 @@
 package api
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -25,11 +26,18 @@ func logging(logger *slog.Logger, next http.Handler) http.Handler {
 		start := time.Now()
 		ww := &wrappedWriter{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(ww, r)
-		logger.Info("http",
-			"method", r.Method,
-			"path", r.URL.Path,
-			"status", ww.status,
-			"duration", time.Since(start),
+		duration := time.Since(start)
+		
+		logger.Info("http request",
+			slog.Group("request",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"remote_addr", r.RemoteAddr,
+			),
+			slog.Group("response",
+				"status", ww.status,
+				"duration_ms", duration.Milliseconds(),
+			),
 		)
 	})
 }
@@ -38,7 +46,12 @@ func recovery(logger *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if rec := recover(); rec != nil {
-				logger.Error("panic recovered", "recover", rec, "path", r.URL.Path)
+				// Log limited information to avoid sensitive data exposure
+				logger.Error("panic recovered",
+					"path", r.URL.Path,
+					"method", r.Method,
+					"panic_type", fmt.Sprintf("%T", rec),
+				)
 				respondError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error")
 			}
 		}()

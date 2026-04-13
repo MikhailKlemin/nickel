@@ -49,7 +49,10 @@ func GetAnalyticsSummary(ctx context.Context, pool *pgxpool.Pool, periodFrom, pe
 // queryMonthlyBreakdown returns one MonthlySummary row per calendar month
 // that has at least one transaction within the requested period bounds.
 func queryMonthlyBreakdown(ctx context.Context, pool *pgxpool.Pool, periodFrom, periodTo string) ([]MonthlySummary, error) {
-	where, args := periodWhere("TO_CHAR(t.date, 'YYYY-MM')", periodFrom, periodTo)
+	where, args, err := periodWhere("TO_CHAR(t.date, 'YYYY-MM')", periodFrom, periodTo)
+	if err != nil {
+		return nil, fmt.Errorf("invalid period parameters: %w", err)
+	}
 
 	query := fmt.Sprintf(`
 		SELECT
@@ -86,9 +89,11 @@ func queryMonthlyBreakdown(ctx context.Context, pool *pgxpool.Pool, periodFrom, 
 // col must be one of the declared groupColumn constants — the type prevents
 // arbitrary SQL interpolation at compile time.
 func queryGroupedTotals(ctx context.Context, pool *pgxpool.Pool, col groupColumn, periodFrom, periodTo string) (map[string]int64, error) {
-	// t.amount_cents < 0 is always the base condition. Period bounds, if
-	// present, are appended as additional AND clauses via periodWhere.
-	periodClause, args := periodWhere("TO_CHAR(t.date, 'YYYY-MM')", periodFrom, periodTo)
+	// First get period conditions
+	periodClause, args, err := periodWhere("TO_CHAR(t.date, 'YYYY-MM')", periodFrom, periodTo)
+	if err != nil {
+		return nil, fmt.Errorf("invalid period parameters: %w", err)
+	}
 
 	var where string
 	if periodClause == "" {
@@ -97,6 +102,16 @@ func queryGroupedTotals(ctx context.Context, pool *pgxpool.Pool, col groupColumn
 		// periodClause is "WHERE <cond> [AND <cond>]"; strip the keyword and
 		// append to our own WHERE so there is exactly one WHERE in the query.
 		where = "WHERE t.amount_cents < 0 AND " + strings.TrimPrefix(periodClause, "WHERE ")
+	}
+
+	// Validate column is safe
+	colStr := string(col)
+	allowedColumns := map[string]bool{
+		"type":     true,
+		"category": true,
+	}
+	if !allowedColumns[colStr] {
+		return nil, fmt.Errorf("unsafe grouping column: %s", colStr)
 	}
 
 	// COALESCE maps NULL categories to the sentinel "uncategorized"
@@ -109,7 +124,7 @@ func queryGroupedTotals(ctx context.Context, pool *pgxpool.Pool, col groupColumn
 		%s
 		GROUP BY 1
 		ORDER BY 2 DESC
-	`, col, where)
+	`, colStr, where)
 
 	rows, err := pool.Query(ctx, query, args...)
 	if err != nil {
@@ -135,7 +150,16 @@ func queryGroupedTotals(ctx context.Context, pool *pgxpool.Pool, col groupColumn
 //
 // Returned placeholder indices start at $1 and increment for each bound
 // present, so the caller can safely append additional args if needed.
-func periodWhere(expr, from, to string) (clause string, args []any) {
+func periodWhere(expr, from, to string) (clause string, args []any, err error) {
+	// Whitelist of safe expressions to prevent SQL injection
+	safeExpressions := map[string]bool{
+		"TO_CHAR(t.date, 'YYYY-MM')": true,
+	}
+	
+	if !safeExpressions[expr] {
+		return "", nil, fmt.Errorf("unsafe SQL expression: %s", expr)
+	}
+	
 	var conditions []string
 
 	if from != "" {
@@ -148,7 +172,7 @@ func periodWhere(expr, from, to string) (clause string, args []any) {
 	}
 
 	if len(conditions) == 0 {
-		return "", nil
+		return "", nil, nil
 	}
-	return "WHERE " + strings.Join(conditions, " AND "), args
+	return "WHERE " + strings.Join(conditions, " AND "), args, nil
 }

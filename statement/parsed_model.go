@@ -5,6 +5,7 @@ package statement
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -68,10 +69,17 @@ func (t ParsedTransaction) AmountEuroString() string {
 }
 
 func formatAmountEuro(cents int64) string {
-	sign := ""
+	var b strings.Builder
+	b.Grow(12) // Pre-allocate for typical amounts like "-1234.56"
+	
 	if cents < 0 {
-		sign = "-"
+		b.WriteByte('-')
 		cents = -cents
 	}
-	return fmt.Sprintf("%s%d.%02d", sign, cents/100, cents%100)
+	
+	euros := cents / 100
+	centsRem := cents % 100
+	
+	fmt.Fprintf(&b, "%d.%02d", euros, centsRem)
+	return b.String()
 }
