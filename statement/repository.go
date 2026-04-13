@@ -43,6 +43,9 @@ func InsertStatement(ctx context.Context, pool *pgxpool.Pool, rec *StatementReco
 // InsertTransactions inserts multiple TransactionRecords in a single batch.
 // Conflicts on (statement_id, transaction_number) are ignored (DO NOTHING).
 func InsertTransactions(ctx context.Context, pool *pgxpool.Pool, records []TransactionRecord) error {
+	if len(records) == 0 {
+		return nil
+	}
 	const insertSQL = `
 		INSERT INTO transactions (
 			statement_id, transaction_number, date, type, description, amount_cents, category

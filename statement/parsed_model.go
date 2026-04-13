@@ -1,3 +1,5 @@
+//go:build go1.25
+
 package statement
 
 import (
@@ -9,12 +11,12 @@ import (
 const dateLayoutISO = "2006-01-02"
 
 type ParsedStatement struct {
-	AccountHolder string             `json:"account_holder"`
-	AccountNumber string             `json:"account_number"`
-	IBAN          string             `json:"iban"`
-	BIC           string             `json:"bic"`
-	PeriodFrom    string             `json:"period_from"`
-	PeriodTo      string             `json:"period_to"`
+	AccountHolder string              `json:"account_holder"`
+	AccountNumber string              `json:"account_number"`
+	IBAN          string              `json:"iban"`
+	BIC           string              `json:"bic"`
+	PeriodFrom    string              `json:"period_from"`
+	PeriodTo      string              `json:"period_to"`
 	Transactions  []ParsedTransaction `json:"transactions"`
 }
 

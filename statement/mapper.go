@@ -1,8 +1,9 @@
+//go:build go1.25
+
 package statement
 
 import (
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -33,17 +34,14 @@ func MapToStatementRecord(ps *ParsedStatement, uploadedAt time.Time) (*Statement
 func MapToTransactionRecords(statementID int64, transactions []ParsedTransaction) []TransactionRecord {
 	records := make([]TransactionRecord, 0, len(transactions))
 	for _, pt := range transactions {
-		// Clean up description by removing extra whitespace
-		desc := strings.Join(strings.Fields(pt.Description), " ")
-		
 		records = append(records, TransactionRecord{
-			StatementID:      statementID,
+			StatementID:       statementID,
 			TransactionNumber: pt.Number,
-			Date:             pt.Date,
-			Type:             pt.Type,
-			Description:      desc,
-			AmountCents:      pt.AmountCents,
-			Category:         nil, // Category not available from parsing
+			Date:              pt.Date,
+			Type:              pt.Type,
+			Description:       pt.Description,
+			AmountCents:       pt.AmountCents,
+			Category:          nil,
 		})
 	}
 	return records
