@@ -5,7 +5,6 @@ package statement
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -72,16 +71,16 @@ func formatAmountEuro(cents int64) string {
 	if cents == 0 {
 		return "0.00"
 	}
-	
+
 	var b []byte
 	if cents < 0 {
 		b = append(b, '-')
 		cents = -cents
 	}
-	
+
 	euros := cents / 100
 	centsRem := cents % 100
-	
+
 	b = fmt.Appendf(b, "%d.%02d", euros, centsRem)
 	return string(b)
 }
