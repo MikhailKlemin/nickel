@@ -69,19 +69,21 @@ func (t ParsedTransaction) AmountEuroString() string {
 }
 
 func formatAmountEuro(cents int64) string {
-	var b strings.Builder
-	b.Grow(12) // Pre-allocate for typical amounts like "-1234.56"
+	if cents == 0 {
+		return "0.00"
+	}
 	
+	var b []byte
 	if cents < 0 {
-		b.WriteByte('-')
+		b = append(b, '-')
 		cents = -cents
 	}
 	
 	euros := cents / 100
 	centsRem := cents % 100
 	
-	fmt.Fprintf(&b, "%d.%02d", euros, centsRem)
-	return b.String()
+	b = fmt.Appendf(b, "%d.%02d", euros, centsRem)
+	return string(b)
 }
 
 // ToJSON returns the JSON representation of the parsed statement.

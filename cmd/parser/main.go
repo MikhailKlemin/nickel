@@ -50,6 +50,13 @@ func run(ctx context.Context, args []string, logger *slog.Logger) error {
 		*outputPath = base + ".json"
 	}
 
+	// Ensure the directory exists
+	if dir := filepath.Dir(*outputPath); dir != "." {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return fmt.Errorf("create output directory: %w", err)
+		}
+	}
+	
 	// Write to file
 	if err := os.WriteFile(*outputPath, jsonData, 0644); err != nil {
 		return fmt.Errorf("write output file: %w", err)
