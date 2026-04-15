@@ -44,8 +44,9 @@ func run(ctx context.Context, args []string, logger *slog.Logger) error {
 
 	// Determine output path if not provided
 	if *outputPath == "" {
-		ext := filepath.Ext(*filePath)
-		base := *filePath[:len(*filePath)-len(ext)]
+		inputPath := *filePath // Dereference the pointer
+		ext := filepath.Ext(inputPath)
+		base := inputPath[:len(inputPath)-len(ext)]
 		*outputPath = base + ".json"
 	}
 

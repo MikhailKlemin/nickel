@@ -19,7 +19,7 @@ type ParsedStatement struct {
 	PeriodFrom      string              `json:"period_from"`
 	PeriodTo        string              `json:"period_to"`
 	Transactions    []ParsedTransaction `json:"transactions"`
-	SkippedTxBlocks int                 `json:"skipped_tx_blocks"` // blocks the parser could not parse
+	SkippedTxBlocks int                 `json:"skipped_tx_blocks,omitempty"` // blocks the parser could not parse
 }
 
 type ParsedTransaction struct {
