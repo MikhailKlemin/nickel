@@ -83,3 +83,9 @@ func formatAmountEuro(cents int64) string {
 	fmt.Fprintf(&b, "%d.%02d", euros, centsRem)
 	return b.String()
 }
+
+// ToJSON returns the JSON representation of the parsed statement.
+// The format matches the golden test files.
+func (ps *ParsedStatement) ToJSON() ([]byte, error) {
+	return json.MarshalIndent(ps, "", "  ")
+}
