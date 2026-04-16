@@ -10,6 +10,7 @@ CREATE TABLE statements (
 
 CREATE INDEX idx_statements_period ON statements(period);
 
+-- Function to automatically update updated_at columns
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN

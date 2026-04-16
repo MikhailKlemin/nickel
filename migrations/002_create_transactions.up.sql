@@ -12,11 +12,13 @@ CREATE TABLE transactions (
     UNIQUE(statement_id, transaction_number)
 );
 
+-- Indexes for common query patterns
 CREATE INDEX idx_transactions_date ON transactions(date);
 CREATE INDEX idx_transactions_type ON transactions(type);
 CREATE INDEX idx_transactions_category ON transactions(category);
 CREATE INDEX idx_transactions_amount_cents ON transactions(amount_cents);
 CREATE INDEX idx_transactions_statement_id ON transactions(statement_id);
 
+-- Uses the function created in migration 001
 CREATE TRIGGER update_transactions_updated_at BEFORE UPDATE ON transactions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
