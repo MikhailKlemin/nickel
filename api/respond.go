@@ -5,7 +5,6 @@ package api
 import (
 	"encoding/json"
 	"io"
-	"log/slog"
 	"net/http"
 )
 
@@ -17,7 +16,7 @@ type errorBody struct {
 func respondJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	
+
 	encoder := json.NewEncoder(w)
 	// If JSON encoding fails after WriteHeader, we cannot change the response.
 	// The error is discarded because there is no practical recovery.
