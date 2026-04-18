@@ -113,7 +113,7 @@ func parseTransactionFilter(r *http.Request) (statement.TransactionFilter, error
 		if err != nil || n < 1 {
 			return f, fmt.Errorf("limit must be a positive integer")
 		}
-		f.Limit = min(n, 200)
+		f.Limit = min(n, 200) // built-in min from Go 1.21+
 	}
 
 	if v := q.Get("offset"); v != "" {
