@@ -8,10 +8,10 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
+
+	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"log/slog"
 )
 
 // setupTestPool creates a connection pool for testing.
@@ -70,9 +70,9 @@ func TestMigrationBootstrap(t *testing.T) {
 		// Check that both tables exist
 		var tables []string
 		rows, err := pool.Query(ctx, `
-			SELECT table_name 
-			FROM information_schema.tables 
-			WHERE table_schema = 'public' 
+			SELECT table_name
+			FROM information_schema.tables
+			WHERE table_schema = 'public'
 			AND table_name IN ('statements', 'transactions', 'schema_migrations')
 			ORDER BY table_name
 		`)
@@ -146,14 +146,14 @@ func TestMigrationBootstrap(t *testing.T) {
 	t.Run("skips_invalid_migration_files", func(t *testing.T) {
 		// Create a temporary migration directory
 		tmpDir := t.TempDir()
-		
+
 		// Write valid migration
 		validSQL := `CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY);`
 		validPath := filepath.Join(tmpDir, "003_test.up.sql")
 		if err := os.WriteFile(validPath, []byte(validSQL), 0644); err != nil {
 			t.Fatalf("write valid migration: %v", err)
 		}
-		
+
 		// Write invalid-named file (should be ignored)
 		invalidPath := filepath.Join(tmpDir, "invalid.sql")
 		if err := os.WriteFile(invalidPath, []byte(`SELECT 1;`), 0644); err != nil {
