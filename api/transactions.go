@@ -144,6 +144,11 @@ func parseTransactionFilter(r *http.Request) (statement.TransactionFilter, error
 		f.DateTo = &t
 	}
 
+	// Validate date range: date_from must not be after date_to
+	if f.DateFrom != nil && f.DateTo != nil && f.DateFrom.After(*f.DateTo) {
+		return f, fmt.Errorf("date_from must be before or equal to date_to")
+	}
+
 	if v := q.Get("category"); v != "" {
 		// "uncategorized" is a sentinel → query.go maps it to IS NULL
 		f.Category = &v
