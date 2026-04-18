@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"slices"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -140,6 +141,9 @@ func readMigrationVersions(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 
 // cmpDiff is a simple diff helper for string slices.
 func cmpDiff(want, got []string) string {
+	if slices.Equal(want, got) {
+		return ""
+	}
 	if len(want) != len(got) {
 		return fmt.Sprintf("length mismatch: want %d, got %d", len(want), len(got))
 	}
@@ -154,6 +158,9 @@ func cmpDiff(want, got []string) string {
 }
 
 func cmpDiffInts(want, got []int) string {
+	if slices.EqualFunc(want, got, func(a, b int) bool { return a == b }) {
+		return ""
+	}
 	if len(want) != len(got) {
 		return fmt.Sprintf("length mismatch: want %d, got %d", len(want), len(got))
 	}

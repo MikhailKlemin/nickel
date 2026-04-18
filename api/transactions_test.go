@@ -5,6 +5,7 @@ package api
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -177,6 +178,5 @@ func TestParseTransactionFilter(t *testing.T) {
 
 // contains checks if string s contains substring substr.
 func contains(s, substr string) bool {
-	return len(s) > 0 && len(substr) > 0 && len(s) >= len(substr) &&
-		(s == substr || (len(s) > len(substr) && (s[:len(substr)] == substr || contains(s[1:], substr))))
+	return strings.Contains(s, substr)
 }
