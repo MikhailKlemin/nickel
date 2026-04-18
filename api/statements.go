@@ -156,3 +156,7 @@ func (s *Server) handleListStatementTransactions(w http.ResponseWriter, r *http.
 
 	s.serveTransactionList(w, r, f)
 }
+
+func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
+	respondJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}

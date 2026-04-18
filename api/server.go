@@ -80,6 +80,9 @@ func (s *Server) routes() {
 	// Aggregated spend summary.
 	// Optional query params: ?period_from=2024-01&period_to=2024-03
 	s.mux.HandleFunc("GET /v1/analytics/summary", s.handleAnalyticsSummary)
+
+	// --- Health ---
+	s.mux.HandleFunc("GET /health", s.handleHealth)
 }
 
 // Handler wraps the internal mux with middleware and returns the final
