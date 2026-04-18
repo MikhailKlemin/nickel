@@ -5,12 +5,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
-	"testing"
-	"time"
-
 	"log/slog"
+	"os"
+	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -32,7 +29,6 @@ func setupTestPool(t *testing.T) *pgxpool.Pool {
 	}
 	t.Cleanup(pool.Close)
 
-	// Verify connection
 	if err := pool.Ping(ctx); err != nil {
 		t.Fatalf("ping database: %v", err)
 	}
@@ -49,38 +45,37 @@ func TestMigrationBootstrap(t *testing.T) {
 		Level: slog.LevelWarn,
 	}))
 
-	// Clean up any existing test state
 	cleanupSQL := []string{
 		`DROP TABLE IF EXISTS transactions CASCADE`,
 		`DROP TABLE IF EXISTS statements CASCADE`,
 		`DROP TABLE IF EXISTS schema_migrations CASCADE`,
 		`DROP FUNCTION IF EXISTS update_updated_at_column CASCADE`,
 	}
+
 	for _, sql := range cleanupSQL {
 		if _, err := pool.Exec(ctx, sql); err != nil {
-			// Ignore errors (tables might not exist)
+			t.Fatalf("cleanup failed for %q: %v", sql, err)
 		}
 	}
 
-	// Test 1: First-time migration
 	t.Run("first_run_applies_all_migrations", func(t *testing.T) {
 		if err := runMigrations(ctx, pool, logger); err != nil {
 			t.Fatalf("first migration run failed: %v", err)
 		}
 
-		// Check that both tables exist
 		var tables []string
 		rows, err := pool.Query(ctx, `
 			SELECT table_name
 			FROM information_schema.tables
 			WHERE table_schema = 'public'
-			AND table_name IN ('statements', 'transactions', 'schema_migrations')
+			  AND table_name IN ('statements', 'transactions', 'schema_migrations')
 			ORDER BY table_name
 		`)
 		if err != nil {
 			t.Fatalf("query tables: %v", err)
 		}
 		defer rows.Close()
+
 		for rows.Next() {
 			var name string
 			if err := rows.Scan(&name); err != nil {
@@ -88,94 +83,86 @@ func TestMigrationBootstrap(t *testing.T) {
 			}
 			tables = append(tables, name)
 		}
+		if err := rows.Err(); err != nil {
+			t.Fatalf("iterate table rows: %v", err)
+		}
 
-		expected := []string{"schema_migrations", "statements", "transactions"}
-		if diff := cmpDiff(expected, tables); diff != "" {
+		expectedTables := []string{"schema_migrations", "statements", "transactions"}
+		if diff := cmpDiff(expectedTables, tables); diff != "" {
 			t.Errorf("tables mismatch (-want +got):\n%s", diff)
 		}
 
-		// Check that both migration versions are recorded
-		var versions []int
-		rows, err = pool.Query(ctx, `SELECT version FROM schema_migrations ORDER BY version`)
-		if err != nil {
-			t.Fatalf("query versions: %v", err)
-		}
-		defer rows.Close()
-		for rows.Next() {
-			var v int
-			if err := rows.Scan(&v); err != nil {
-				t.Fatalf("scan version: %v", err)
-			}
-			versions = append(versions, v)
-		}
-
-		// Check versions directly without cmpDiff
-		if len(versions) != 2 {
-			t.Errorf("expected 2 versions, got %d: %v", len(versions), versions)
-		} else if versions[0] != 1 || versions[1] != 2 {
-			t.Errorf("expected versions [1 2], got %v", versions)
+		versions := readMigrationVersions(t, ctx, pool)
+		expectedVersions := []int{1, 2}
+		if diff := cmpDiffInts(expectedVersions, versions); diff != "" {
+			t.Errorf("migration versions mismatch (-want +got):\n%s", diff)
 		}
 	})
 
-	// Test 2: Idempotency - second run should not fail
 	t.Run("second_run_is_idempotent", func(t *testing.T) {
-		// Count statements before second run
-		var beforeCount int64
-		err := pool.QueryRow(ctx, `SELECT COUNT(*) FROM statements`).Scan(&beforeCount)
-		if err != nil {
-			t.Fatalf("count statements before: %v", err)
-		}
+		beforeVersions := readMigrationVersions(t, ctx, pool)
 
-		// Run migrations again
 		if err := runMigrations(ctx, pool, logger); err != nil {
 			t.Fatalf("second migration run failed: %v", err)
 		}
 
-		// Count statements after - should be unchanged
-		var afterCount int64
-		err = pool.QueryRow(ctx, `SELECT COUNT(*) FROM statements`).Scan(&afterCount)
-		if err != nil {
-			t.Fatalf("count statements after: %v", err)
+		afterVersions := readMigrationVersions(t, ctx, pool)
+
+		if diff := cmpDiffInts(beforeVersions, afterVersions); diff != "" {
+			t.Errorf("schema_migrations changed after second run (-before +after):\n%s", diff)
 		}
-
-		if beforeCount != afterCount {
-			t.Errorf("migration was not idempotent: statement count changed from %d to %d", beforeCount, afterCount)
-		}
-	})
-
-	// Test 3: Invalid migration file handling
-	t.Run("skips_invalid_migration_files", func(t *testing.T) {
-		// Create a temporary migration directory
-		tmpDir := t.TempDir()
-
-		// Write valid migration
-		validSQL := `CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY);`
-		validPath := filepath.Join(tmpDir, "003_test.up.sql")
-		if err := os.WriteFile(validPath, []byte(validSQL), 0644); err != nil {
-			t.Fatalf("write valid migration: %v", err)
-		}
-
-		// Write invalid-named file (should be ignored)
-		invalidPath := filepath.Join(tmpDir, "invalid.sql")
-		if err := os.WriteFile(invalidPath, []byte(`SELECT 1;`), 0644); err != nil {
-			t.Fatalf("write invalid migration: %v", err)
-		}
-
-		// We can't easily test the directory scanning without refactoring,
-		// but the pattern matching in runMigrations should ignore "invalid.sql"
-		// since it doesn't match "*_*.up.sql"
 	})
 }
 
-// cmpDiff is a simple diff helper for slices.
+func readMigrationVersions(t *testing.T, ctx context.Context, pool *pgxpool.Pool) []int {
+	t.Helper()
+
+	rows, err := pool.Query(ctx, `SELECT version FROM schema_migrations ORDER BY version`)
+	if err != nil {
+		t.Fatalf("query versions: %v", err)
+	}
+	defer rows.Close()
+
+	var versions []int
+	for rows.Next() {
+		var v int
+		if err := rows.Scan(&v); err != nil {
+			t.Fatalf("scan version: %v", err)
+		}
+		versions = append(versions, v)
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatalf("iterate version rows: %v", err)
+	}
+
+	return versions
+}
+
+// cmpDiff is a simple diff helper for string slices.
 func cmpDiff(want, got []string) string {
 	if len(want) != len(got) {
 		return fmt.Sprintf("length mismatch: want %d, got %d", len(want), len(got))
 	}
+
 	for i := range want {
 		if want[i] != got[i] {
 			return fmt.Sprintf("at index %d: want %q, got %q", i, want[i], got[i])
 		}
 	}
+
+	return ""
+}
+
+func cmpDiffInts(want, got []int) string {
+	if len(want) != len(got) {
+		return fmt.Sprintf("length mismatch: want %d, got %d", len(want), len(got))
+	}
+
+	for i := range want {
+		if want[i] != got[i] {
+			return fmt.Sprintf("at index %d: want %d, got %d", i, want[i], got[i])
+		}
+	}
+
 	return ""
 }

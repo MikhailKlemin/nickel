@@ -24,7 +24,6 @@ import (
 )
 
 func main() {
-	// Use structured logging with text output to stderr
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	}))
@@ -37,39 +36,34 @@ func main() {
 }
 
 func run(ctx context.Context, logger *slog.Logger) error {
-	// Read configuration from environment
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
+
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		return errors.New("DATABASE_URL environment variable is required")
 	}
 
-	// Create database connection pool
 	pool, err := pgxpool.New(ctx, dsn)
 	if err != nil {
 		return fmt.Errorf("unable to create connection pool: %w", err)
 	}
 	defer pool.Close()
 
-	// Verify database connection
 	if err := pool.Ping(ctx); err != nil {
 		return fmt.Errorf("database ping failed: %w", err)
 	}
 	logger.Info("database connection established")
 
-	// Run migrations
 	if err := runMigrations(ctx, pool, logger); err != nil {
 		return fmt.Errorf("migrations failed: %w", err)
 	}
 
-	// Initialize API server
 	server := api.NewServer(pool, logger)
 	handler := server.Handler()
 
-	// Configure HTTP server with timeouts
 	httpServer := &http.Server{
 		Addr:         ":" + port,
 		Handler:      handler,
@@ -78,11 +72,9 @@ func run(ctx context.Context, logger *slog.Logger) error {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// Graceful shutdown handling
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	// Start server in a goroutine
 	serverErr := make(chan error, 1)
 	go func() {
 		logger.Info("starting server", "port", port)
@@ -91,7 +83,6 @@ func run(ctx context.Context, logger *slog.Logger) error {
 		}
 	}()
 
-	// Wait for shutdown signal or server error
 	select {
 	case sig := <-shutdown:
 		logger.Info("shutdown signal received", "signal", sig)
@@ -100,7 +91,6 @@ func run(ctx context.Context, logger *slog.Logger) error {
 		return err
 	}
 
-	// Graceful shutdown with timeout
 	shutdownCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
@@ -112,109 +102,128 @@ func run(ctx context.Context, logger *slog.Logger) error {
 	return nil
 }
 
+type migrationFile struct {
+	version int
+	path    string
+}
+
 // runMigrations executes all SQL migration files in the migrations directory.
 // Migrations are applied in version order (001_, 002_, etc.) and each version
 // is recorded in the schema_migrations table to guarantee idempotency.
 func runMigrations(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger) error {
-	// Ensure migrations table exists
 	const createTableSQL = `
 		CREATE TABLE IF NOT EXISTS schema_migrations (
 			version INTEGER PRIMARY KEY,
 			applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)`
+
 	if _, err := pool.Exec(ctx, createTableSQL); err != nil {
 		return fmt.Errorf("create migrations table: %w", err)
 	}
 
-	// Read migration files from migrations directory
-	entries, err := os.ReadDir("migrations")
+	migrations, err := collectMigrationFiles("migrations")
 	if err != nil {
-		return fmt.Errorf("read migrations directory: %w", err)
+		return err
 	}
-
-	// Collect and sort migration files by version number
-	type migrationFile struct {
-		version int
-		path    string
-	}
-	var migrations []migrationFile
-
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-		name := entry.Name()
-		if !strings.HasSuffix(name, ".up.sql") {
-			continue
-		}
-		// Extract version prefix: "001_create_statements.up.sql" → 1
-		parts := strings.SplitN(name, "_", 2)
-		if len(parts) < 2 {
-			continue
-		}
-		version, err := strconv.Atoi(parts[0])
-		if err != nil || version <= 0 {
-			continue
-		}
-		migrations = append(migrations, migrationFile{
-			version: version,
-			path:    filepath.Join("migrations", name),
-		})
-	}
-
-	// Sort by version ascending
-	slices.SortFunc(migrations, func(a, b migrationFile) int {
-		return cmp.Compare(a.version, b.version)
-	})
 
 	if len(migrations) == 0 {
 		logger.Warn("no migration files found in migrations/ directory")
 		return nil
 	}
 
-	// Apply each migration in a separate transaction
 	for _, mig := range migrations {
-		// Check if already applied
-		const checkSQL = `SELECT EXISTS (SELECT 1 FROM schema_migrations WHERE version = $1)`
-		var alreadyApplied bool
-		err := pool.QueryRow(ctx, checkSQL, mig.version).Scan(&alreadyApplied)
+		applied, err := migrationApplied(ctx, pool, mig.version)
 		if err != nil {
 			return fmt.Errorf("check migration %d: %w", mig.version, err)
 		}
-
-		if alreadyApplied {
+		if applied {
 			logger.Info("migration already applied", "version", mig.version, "file", filepath.Base(mig.path))
 			continue
 		}
 
-		// Read migration SQL
-		sqlBytes, err := os.ReadFile(mig.path)
-		if err != nil {
-			return fmt.Errorf("read migration file %q: %w", mig.path, err)
-		}
-		sql := string(sqlBytes)
-
-		// Apply in a transaction
-		tx, err := pool.Begin(ctx)
-		if err != nil {
-			return fmt.Errorf("begin transaction for migration %d: %w", mig.version, err)
-		}
-		defer tx.Rollback(ctx)
-
-		if _, err := tx.Exec(ctx, sql); err != nil {
-			return fmt.Errorf("execute migration %d (%s): %w", mig.version, filepath.Base(mig.path), err)
-		}
-
-		// Record migration
-		if _, err := tx.Exec(ctx, `INSERT INTO schema_migrations (version) VALUES ($1)`, mig.version); err != nil {
-			return fmt.Errorf("record migration %d: %w", mig.version, err)
-		}
-
-		if err := tx.Commit(ctx); err != nil {
-			return fmt.Errorf("commit migration %d: %w", mig.version, err)
+		if err := applyMigration(ctx, pool, mig); err != nil {
+			return err
 		}
 
 		logger.Info("applied migration", "version", mig.version, "file", filepath.Base(mig.path))
+	}
+
+	return nil
+}
+
+func collectMigrationFiles(dir string) ([]migrationFile, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, fmt.Errorf("read migrations directory: %w", err)
+	}
+
+	var migrations []migrationFile
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		name := entry.Name()
+		if !strings.HasSuffix(name, ".up.sql") {
+			continue
+		}
+
+		parts := strings.SplitN(name, "_", 2)
+		if len(parts) < 2 {
+			continue
+		}
+
+		version, err := strconv.Atoi(parts[0])
+		if err != nil || version <= 0 {
+			continue
+		}
+
+		migrations = append(migrations, migrationFile{
+			version: version,
+			path:    filepath.Join(dir, name),
+		})
+	}
+
+	slices.SortFunc(migrations, func(a, b migrationFile) int {
+		return cmp.Compare(a.version, b.version)
+	})
+
+	return migrations, nil
+}
+
+func migrationApplied(ctx context.Context, pool *pgxpool.Pool, version int) (bool, error) {
+	const checkSQL = `SELECT EXISTS (SELECT 1 FROM schema_migrations WHERE version = $1)`
+
+	var applied bool
+	if err := pool.QueryRow(ctx, checkSQL, version).Scan(&applied); err != nil {
+		return false, err
+	}
+
+	return applied, nil
+}
+
+func applyMigration(ctx context.Context, pool *pgxpool.Pool, mig migrationFile) error {
+	sqlBytes, err := os.ReadFile(mig.path)
+	if err != nil {
+		return fmt.Errorf("read migration file %q: %w", mig.path, err)
+	}
+
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin transaction for migration %d: %w", mig.version, err)
+	}
+	defer tx.Rollback(ctx)
+
+	if _, err := tx.Exec(ctx, string(sqlBytes)); err != nil {
+		return fmt.Errorf("execute migration %d (%s): %w", mig.version, filepath.Base(mig.path), err)
+	}
+
+	if _, err := tx.Exec(ctx, `INSERT INTO schema_migrations (version) VALUES ($1)`, mig.version); err != nil {
+		return fmt.Errorf("record migration %d: %w", mig.version, err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit migration %d: %w", mig.version, err)
 	}
 
 	return nil
