@@ -369,29 +369,30 @@ CREATE TABLE schema_migrations (
 
 ## 10. Current Gaps
 
-### Missing Handlers: NONE - All 8 endpoints implemented
+### Missing Handlers: NONE - All 8 endpoints are implemented inline in `api/server.go`
 
 ### Missing Repository Methods: NONE - All CRUD operations present
 
 ### Validation Gaps:
-1. **Upload size**: Limited to 32MB but no file type validation beyond extension
-2. **Period format**: Validates YYYY-MM but no range checking
-3. **IBAN format**: No validation beyond regex match in parser
+1. **Upload validation**: File size limited to 32MB but no content-type validation
+2. **Period format**: Validates YYYY-MM format but no range validation
+3. **IBAN format**: Basic regex validation in parser but no comprehensive IBAN validation
 
 ### Error Model Gaps:
-1. **Sentinel errors**: Only `ErrNotFound` defined in provided files
-2. **Error wrapping**: Some errors not wrapped with `%w`
-3. **User messages**: Some error messages could be more specific
+1. **Sentinel errors**: Only `ErrNotFound` is defined in `statement/query.go`
+2. **Error wrapping**: Some errors are not wrapped with `%w` for context
+3. **Error types**: Limited error categorization for different failure scenarios
 
 ### Analytics Implementation Gaps:
-1. **Missing `GetAnalyticsSummary()`**: `analytics.go` has `queryGroupedTotals()` but no high-level summary function
-2. **No monthly breakdown**: `MonthlySummary` type exists but no query implementation
+1. **Missing `GetAnalyticsSummary()`**: `statement/analytics.go` contains `queryGroupedTotals()` helper but no high-level function to aggregate analytics data
+2. **API integration**: The `handleAnalyticsSummary` handler in `api/server.go` needs to call analytics functions that don't exist yet
+3. **Monthly breakdown**: `MonthlySummary` type exists in `statement/api_model.go` but no implementation to populate it
 
-### Startup/Migration Issues: NONE - Complete migration system
+### Startup/Migration Issues: NONE - Complete migration system in `cmd/server/main.go`
 
 ### Contract Mismatches:
-1. **Period mapping**: Parser returns `PeriodFrom`/`PeriodTo` (DD/MM/YYYY) → Storage expects single `Period` (YYYY-MM)
-2. **Amount sign**: Parser assumes negative = debit, positive = credit
+1. **Period mapping**: Parser returns `PeriodFrom`/`PeriodTo` (DD/MM/YYYY) → Storage expects single `Period` (YYYY-MM) via `MapToStatementRecord()`
+2. **Amount sign**: Parser assumes negative = debit, positive = credit (consistent throughout)
 
 ## 11. Stage 3 Working Notes
 
@@ -404,15 +405,16 @@ CREATE TABLE schema_migrations (
 - ✅ Transaction filtering/pagination
 
 ### Partially Implemented:
-1. **Analytics**: `analytics.go` has query building but no high-level API integration
-2. **Error Types**: Limited sentinel error definitions
+1. **Analytics**: `statement/analytics.go` has `queryGroupedTotals()` helper but no `GetAnalyticsSummary()` function to aggregate data for the API
+2. **Error Types**: Limited sentinel error definitions beyond `ErrNotFound`
+3. **Handler implementations**: All handlers are implemented inline in `api/server.go`, but analytics handler references unimplemented functionality
 
 ### Recommended Next Steps:
-1. **Testing**: Add comprehensive test coverage
-2. **Validation**: Enhance input validation
-3. **Error handling**: Standardize error codes and sentinel errors
-4. **Analytics Completion**: Implement `GetAnalyticsSummary()` and integrate with API
-5. **Documentation**: API docs, deployment guide
+1. **Complete Analytics**: Implement `GetAnalyticsSummary()` in `statement/analytics.go` to aggregate monthly data, type breakdowns, and category breakdowns
+2. **Wire Analytics Handler**: Update `handleAnalyticsSummary` in `api/server.go` to call the new analytics function
+3. **Testing**: Add comprehensive test coverage for API endpoints and analytics
+4. **Validation**: Enhance input validation for file uploads and query parameters
+5. **Error handling**: Standardize error codes and add more sentinel errors
 
 ### Most Relevant Files for Maintenance:
 - `api/server.go` - Route definitions and handler wiring
@@ -424,18 +426,18 @@ CREATE TABLE schema_migrations (
 ## 12. Known Unknowns
 
 ### Unresolved Points:
-1. **Authentication/Authorization**: None implemented - assumed personal use
-2. **Rate limiting**: No protection against abuse
-3. **PDF library fallback**: If `pdftotext` not available, no alternative
-4. **Category system**: Rules/ML not implemented - only manual assignment
-5. **Deployment**: No Dockerfile, no configuration management
-6. **Analytics API**: How analytics endpoints connect to `queryGroupedTotals()`
+1. **Authentication/Authorization**: None implemented - assumed for personal use
+2. **Rate limiting**: No protection against abuse or DoS attacks
+3. **PDF library fallback**: Relies on external `pdftotext` command with no fallback
+4. **Category system**: Only manual category assignment via PATCH endpoint; no rule-based or ML categorization
+5. **Deployment**: No Dockerfile or containerization configuration
+6. **Analytics API**: The `handleAnalyticsSummary` handler exists but cannot function without `GetAnalyticsSummary()` implementation
 
 ### Questions for Confirmation:
-1. Is 32MB upload limit sufficient for multi-page PDFs?
-2. Should `period` in statements table be derived from `PeriodFrom` or `PeriodTo`?
-3. Are there any batch operations needed (bulk category updates)?
-4. How should analytics endpoints use `queryGroupedTotals()`?
+1. Is 32MB upload limit sufficient for multi-page PDFs? (Likely yes for typical bank statements)
+2. Should `period` in statements table be derived from `PeriodFrom` or `PeriodTo`? (Currently uses `PeriodFrom` via `MapToStatementRecord()`)
+3. Are there any batch operations needed? (Bulk category updates would be useful but not implemented)
+4. How should analytics endpoints use `queryGroupedTotals()`? (Need to implement aggregation that calls this helper)
 
 ## 13. Assistant Handoff
 
@@ -459,44 +461,44 @@ CREATE TABLE schema_migrations (
 4. Analytics API is fully implemented (code suggests partial implementation)
 
 ### Best First Edit Targets (for enhancements):
-1. `statement/analytics.go` - Complete analytics implementation
-2. `api/server.go` - Connect analytics endpoints
-3. `statement/parser.go` - Improve error handling for malformed PDFs
-4. `api/middleware.go` - Add authentication middleware if needed
-5. `statement/query.go` - Add more filter options and error sentinels
+1. `statement/analytics.go` - Implement `GetAnalyticsSummary()` function to aggregate analytics data
+2. `api/server.go` - Update `handleAnalyticsSummary` to use the new analytics function
+3. `statement/parser.go` - Improve error handling for malformed PDFs and edge cases
+4. `api/middleware.go` - Consider adding authentication middleware for production use
+5. `statement/query.go` - Add more filter options and define additional error sentinels
 
 ### Next Patch Candidates by File Path:
-1. **Complete analytics**: `statement/analytics.go` - Add `GetAnalyticsSummary()` function
-2. **Enhance validation**: `api/statements.go` - Add file type/content validation
-3. **Add error sentinels**: `statement/query.go` - Define more error types
-4. **Improve logging**: `api/middleware.go` - Add request ID tracing
-5. **Add configuration**: `cmd/server/main.go` - Environment variable validation
+1. **Complete analytics**: `statement/analytics.go` - Add `GetAnalyticsSummary()` function that returns `AnalyticsSummary`
+2. **Update API**: `api/server.go` - Modify `handleAnalyticsSummary` to call `GetAnalyticsSummary()`
+3. **Add validation**: Enhance upload validation in `api/server.go`'s `handleUpload` function
+4. **Add error sentinels**: `statement/query.go` - Define more error types like `ErrInvalidPeriod`
+5. **Improve configuration**: `cmd/server/main.go` - Add validation for required environment variables
 
 ## Change Summary
 
 **Files/Packages Inspected (Provided in Chat)**:
-- `api/middleware.go` - Complete
-- `api/respond.go` - Complete  
-- `api/server.go` - Complete
-- `cmd/server/main.go` - Complete
-- `cmd/server/migration_test.go` - Complete
-- `statement/analytics.go` - Partial (needs `GetAnalyticsSummary()`)
-- `statement/api_model.go` - Complete
-- `statement/mapper.go` - Complete
-- `statement/parsed_model.go` - Complete
-- `statement/parser.go` - Complete
-- `statement/query.go` - Complete
-- `statement/repository.go` - Complete
-- `statement/source.go` - Complete
-- `statement/storage_model.go` - Complete
+- `api/middleware.go` - Complete middleware implementation
+- `api/respond.go` - Complete response helpers  
+- `api/server.go` - Complete with all handlers implemented inline
+- `cmd/server/main.go` - Complete server entry with migrations
+- `cmd/server/migration_test.go` - Complete migration tests
+- `statement/analytics.go` - Partial (has `queryGroupedTotals()` but missing `GetAnalyticsSummary()`)
+- `statement/api_model.go` - Complete API response structs
+- `statement/mapper.go` - Complete model mapping functions
+- `statement/parsed_model.go` - Complete parsed data models
+- `statement/parser.go` - Complete parsing logic
+- `statement/query.go` - Complete query building and filtering
+- `statement/repository.go` - Complete storage operations
+- `statement/source.go` - Complete PDF/text extraction
+- `statement/storage_model.go` - Complete storage models
 
 **Files Mentioned in Digest But Not Provided in Chat**:
-- `api/analytics.go` - Not provided
-- `api/statements.go` - Not provided  
-- `api/transactions.go` - Not provided
+- `api/analytics.go` - Not needed (handlers are in `api/server.go`)
+- `api/statements.go` - Not needed (handlers are in `api/server.go`)  
+- `api/transactions.go` - Not needed (handlers are in `api/server.go`)
 - `api/transactions_test.go` - Not provided
-- `cmd/import/main.go` - Not provided
-- `cmd/parser/main.go` - Not provided
+- `cmd/import/main.go` - Not provided (inferred CLI tool)
+- `cmd/parser/main.go` - Not provided (inferred CLI tool)
 - `statement/mapper_test.go` - Not provided
 - `statement/parser_test.go` - Not provided
 - `statement/source_test.go` - Not provided
@@ -504,20 +506,21 @@ CREATE TABLE schema_migrations (
 **Guideline Compliance** (Based on Provided Files):
 - ✓ Uses `any` not `interface{}`
 - ✓ Uses `slog` for structured logging
-- ✗ Missing `slices` package usage (uses manual loops)
-- ✗ Missing `maps` package usage (manual map loops)
-- ✗ Missing `for range n` loops (uses traditional `for`)
-- ✗ Missing `t.Context()` in tests (uses `context.Background()`)
-- ✗ Missing `fmt.Appendf` usage (uses `[]byte(fmt.Sprintf(...))` pattern)
+- ✗ Missing `slices` package usage (uses manual loops where `slices` could be used)
+- ✗ Missing `maps` package usage (manual map operations where `maps` could be used)
+- ✗ Missing `for range n` loops (uses traditional `for i := 0; i < n; i++`)
+- ✗ Missing `t.Context()` in tests (uses `context.Background()` in migration tests)
+- ✗ Missing `fmt.Appendf` usage (pattern not shown but likely uses traditional formatting)
 - ✗ Missing `sync.WaitGroup.Go()` (not applicable in current code)
 - ✓ Uses `errors.Join` where appropriate
 - ✓ Uses `context.Context` as first parameter in most functions
-- ✗ JSON tags use `omitempty` not `omitzero`
+- ✗ JSON tags use `omitempty` not `omitzero` (Go 1.24+ feature)
 
 **Key Corrections to Previous Digest**:
-1. Middleware order: recovery wraps logging (not logging wraps recovery)
-2. Router uses standard `http.ServeMux` (not Go 1.22+ pattern matching)
-3. Analytics implementation is partial (no `GetAnalyticsSummary()` function)
-4. Test coverage shows only migration tests in provided files
+1. All HTTP handlers are implemented inline in `api/server.go`, not in separate files
+2. Middleware order: recovery wraps logging wraps mux
+3. Router uses standard `http.ServeMux` (not Go 1.22+ pattern matching)
+4. Analytics implementation is incomplete - missing `GetAnalyticsSummary()` function
+5. The `handleAnalyticsSummary` handler exists but cannot function without analytics implementation
 
-**Repository State**: Production-ready Stage 3 implementation with complete core features. Analytics layer needs completion. Ready for testing enhancement and deployment preparations.
+**Repository State**: Stage 3 implementation with complete core features (parsing, storage, API endpoints). Analytics layer is the main gap requiring completion. Ready for finalizing analytics and adding comprehensive tests.
