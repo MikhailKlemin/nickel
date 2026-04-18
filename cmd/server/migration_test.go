@@ -108,8 +108,11 @@ func TestMigrationBootstrap(t *testing.T) {
 			versions = append(versions, v)
 		}
 
-		if diff := cmpDiff([]int{1, 2}, versions); diff != "" {
-			t.Errorf("recorded versions mismatch (-want +got):\n%s", diff)
+		// Check versions directly without cmpDiff
+		if len(versions) != 2 {
+			t.Errorf("expected 2 versions, got %d: %v", len(versions), versions)
+		} else if versions[0] != 1 || versions[1] != 2 {
+			t.Errorf("expected versions [1 2], got %v", versions)
 		}
 	})
 
