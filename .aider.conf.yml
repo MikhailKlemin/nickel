@@ -1,6 +1,0 @@
-read:
-  - go_modern_guidelines.md
-  - nickel-steps.md
-
-auto-commits: true
-dirty-commits: true
