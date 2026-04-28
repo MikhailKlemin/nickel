@@ -1,0 +1,678 @@
+{
+  "info": {
+    "name": "Nickel Statement Analyzer",
+    "description": "Complete test suite for the Nickel Statement Analyzer REST API (Step 3).\n\n## Setup\n1. Start Postgres: `docker compose up -d postgres`\n2. Start server: `go run ./cmd/server` (migrations run automatically)\n3. Run requests top-to-bottom \u2014 later requests rely on IDs captured by earlier ones.\n\n## Variables\nAll base URL and captured IDs are stored as collection variables.\nAfter running **Upload Statement**, the `statement_id` and `transaction_id` variables are populated automatically via the Tests tab scripts.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "statement_id",
+      "value": "",
+      "type": "string",
+      "description": "Populated automatically after Upload Statement succeeds"
+    },
+    {
+      "key": "transaction_id",
+      "value": "",
+      "type": "string",
+      "description": "Populated automatically after listing transactions"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/health",
+            "description": "Liveness check. Expect 200 {\"status\":\"ok\"}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Body is ok\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.status).to.eql(\"ok\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Statements",
+      "item": [
+        {
+          "name": "Upload Statement (PDF)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/v1/statements/upload",
+            "description": "Upload the sample PDF statement.\n\n**Before sending:** Go to the Body tab \u2192 form-data \u2192 key `file` \u2192 hover the key field and switch type to **File** \u2192 select `statement/testdata/sample_statement.pdf` from your project root.\n\nOn success the response `id` is saved to the `statement_id` collection variable automatically.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "statement/testdata/sample_statement.pdf",
+                  "description": "Select sample_statement.pdf from your project"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "",
+                  "pm.test(\"Response has expected fields\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.all.keys(['id','period','iban','uploaded_at','transaction_count']);",
+                  "  pm.expect(j.iban).to.eql('FR7616598000012979019000124');",
+                  "  pm.expect(j.period).to.eql('2026-01');",
+                  "  pm.expect(j.transaction_count).to.be.above(0);",
+                  "  // Persist for later requests",
+                  "  pm.collectionVariables.set('statement_id', String(j.id));",
+                  "  console.log('Captured statement_id:', j.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload Statement (duplicate \u2192 409)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/v1/statements/upload",
+            "description": "Re-uploading the same period must return 409 ALREADY_EXISTS.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "statement/testdata/sample_statement.pdf"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Error code ALREADY_EXISTS\", () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('ALREADY_EXISTS');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload Statement (wrong type \u2192 415)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/v1/statements/upload",
+            "description": "Send a .json file \u2014 must be rejected with 415.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "statement/testdata/sample_statement.golden.json",
+                  "description": "Intentionally wrong file type"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 415\", () => pm.response.to.have.status(415));",
+                  "pm.test(\"Error code UNSUPPORTED_FILE_TYPE\", () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('UNSUPPORTED_FILE_TYPE');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload Statement (TXT fallback)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/v1/statements/upload",
+            "description": "Upload the .txt version of the same statement.\n\nNote: this will return 409 if the PDF was already uploaded (same period/IBAN). Delete the statement first or use a different statement file.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "statement/testdata/sample_statement.txt",
+                  "description": "TXT fallback \u2014 same data, different format"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Accepts 201 (new) or 409 (already exists from PDF upload above)",
+                  "pm.test(\"Status 201 or 409\", () => {",
+                  "  pm.expect([201, 409]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Statements",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/statements",
+            "description": "Returns all imported statements (lightweight, no transactions)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Returns array\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.be.an('array');",
+                  "  pm.expect(j.length).to.be.above(0);",
+                  "  const s = j[0];",
+                  "  pm.expect(s).to.have.all.keys(['id','period','iban','uploaded_at','transaction_count']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Statement by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/statements/{{statement_id}}",
+            "description": "Fetch a single statement. Uses `statement_id` captured by Upload."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Correct statement returned\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(String(j.id)).to.eql(pm.collectionVariables.get('statement_id'));",
+                  "  pm.expect(j.iban).to.eql('FR7616598000012979019000124');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Statement by ID (not found \u2192 404)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/statements/999999",
+            "description": "Non-existent ID must return 404 NOT_FOUND."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error code NOT_FOUND\", () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Statement Transactions",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/statements/{{statement_id}}/transactions?limit=10&offset=0",
+            "description": "Paginated transactions scoped to one statement.\nCaptures the first `transaction_id` for later PATCH tests."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Paged response shape\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.all.keys(['data','total','limit','offset']);",
+                  "  pm.expect(j.data).to.be.an('array');",
+                  "  pm.expect(j.limit).to.eql(10);",
+                  "  pm.expect(j.offset).to.eql(0);",
+                  "  pm.expect(j.total).to.be.above(0);",
+                  "});",
+                  "",
+                  "pm.test(\"Transaction fields present\", () => {",
+                  "  const tx = pm.response.json().data[0];",
+                  "  pm.expect(tx).to.have.all.keys(['id','statement_id','number','date','type','description','amount_cents','amount_eur','category']);",
+                  "  // Capture for PATCH test",
+                  "  pm.collectionVariables.set('transaction_id', String(tx.id));",
+                  "  console.log('Captured transaction_id:', tx.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "List Transactions (default)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/transactions",
+            "description": "Global transaction list. Default: limit=50, offset=0, no filters."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Returns paged response\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.limit).to.eql(50);",
+                  "  pm.expect(j.total).to.be.above(0);",
+                  "  pm.expect(j.data.length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Transactions \u2014 filter by type ACHAT",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/transactions?type=ACHAT&limit=20",
+            "description": "Filter by transaction type. Nickel types: ACHAT, VIREMENT, RETRAIT DAB, FRAIS RETRAIT DAB, PRELEVEMENT."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"All results are ACHAT\", () => {",
+                  "  const txs = pm.response.json().data;",
+                  "  pm.expect(txs.length).to.be.above(0);",
+                  "  txs.forEach(tx => pm.expect(tx.type).to.eql('ACHAT'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Transactions \u2014 date range",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/transactions?date_from=2026-01-01&date_to=2026-01-07",
+            "description": "Filter to first week of January 2026."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Dates within range\", () => {",
+                  "  const txs = pm.response.json().data;",
+                  "  txs.forEach(tx => {",
+                  "    pm.expect(tx.date >= '2026-01-01').to.be.true;",
+                  "    pm.expect(tx.date <= '2026-01-07').to.be.true;",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Transactions \u2014 uncategorized",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/transactions?category=uncategorized&limit=5",
+            "description": "The sentinel value `uncategorized` maps to `category IS NULL` in SQL."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"All category fields are null\", () => {",
+                  "  pm.response.json().data.forEach(tx => {",
+                  "    pm.expect(tx.category).to.be.null;",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Transactions \u2014 pagination (page 2)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/transactions?limit=10&offset=10",
+            "description": "Second page (rows 11\u201320). Verify offset is echoed back."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Offset echoed\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.offset).to.eql(10);",
+                  "  pm.expect(j.limit).to.eql(10);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Transactions \u2014 bad date_from \u2192 400",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/transactions?date_from=not-a-date",
+            "description": "Invalid date format must return 400 BAD_REQUEST."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code BAD_REQUEST\", () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('BAD_REQUEST');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Transactions \u2014 inverted date range \u2192 400",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/transactions?date_from=2026-01-31&date_to=2026-01-01",
+            "description": "date_from after date_to must return 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH Category \u2014 set",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/v1/transactions/{{transaction_id}}/category",
+            "description": "Assign the category `Alimentation` to the first transaction captured earlier.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"category\": \"Alimentation\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Category updated\", () => {",
+                  "  pm.expect(pm.response.json().category).to.eql('Alimentation');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH Category \u2014 clear (null)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/v1/transactions/{{transaction_id}}/category",
+            "description": "Clear the category by sending null. Response category must be null.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"category\": null}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Category cleared\", () => {",
+                  "  pm.expect(pm.response.json().category).to.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH Category \u2014 whitespace-only (treated as null)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/v1/transactions/{{transaction_id}}/category",
+            "description": "A whitespace-only string must be normalized to null by the API.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"category\": \"   \"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Category is null (whitespace normalized)\", () => {",
+                  "  pm.expect(pm.response.json().category).to.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH Category \u2014 not found \u2192 404",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/v1/transactions/999999/category",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"category\": \"Shopping\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error code NOT_FOUND\", () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Summary \u2014 no filters",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/analytics/summary",
+            "description": "Full summary across all imported statements.\nReturns months[], by_type{}, by_category{}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Response shape\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.all.keys(['months','by_type','by_category']);",
+                  "  pm.expect(j.months).to.be.an('array');",
+                  "  pm.expect(j.by_type).to.be.an('object');",
+                  "});",
+                  "",
+                  "pm.test(\"Months have correct structure\", () => {",
+                  "  const m = pm.response.json().months[0];",
+                  "  pm.expect(m).to.have.all.keys(['period','debit_cents','credit_cents','transaction_count']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Summary \u2014 with period filter",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/analytics/summary?period_from=2026-01&period_to=2026-01",
+            "description": "Narrow analytics to January 2026 only."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Only Jan 2026 in months\", () => {",
+                  "  const months = pm.response.json().months;",
+                  "  months.forEach(m => pm.expect(m.period).to.eql('2026-01'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Summary \u2014 bad period_from format \u2192 400",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/analytics/summary?period_from=January",
+            "description": "Non-YYYY-MM period must return 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code BAD_REQUEST\", () => {",
+                  "  pm.expect(pm.response.json().code).to.eql('BAD_REQUEST');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Summary \u2014 inverted period range \u2192 400",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/v1/analytics/summary?period_from=2026-03&period_to=2026-01",
+            "description": "period_from after period_to must be rejected."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

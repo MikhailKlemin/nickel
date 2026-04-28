@@ -28,6 +28,10 @@ var allowedExtensions = map[string]bool{
 
 func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(maxUploadBytes); err != nil {
+		if errors.Is(err, http.ErrNotMultipart) || errors.Is(err, http.ErrMissingBoundary) {
+			respondError(w, http.StatusBadRequest, "BAD_REQUEST", "request must be multipart/form-data")
+			return
+		}
 		respondError(w, http.StatusRequestEntityTooLarge, "PAYLOAD_TOO_LARGE", "file exceeds the 32 MiB limit")
 		return
 	}
