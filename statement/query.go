@@ -39,6 +39,31 @@ type TransactionRow struct {
 	Category          *string
 }
 
+// ListCategories returns all distinct non-null categories ordered alphabetically.
+func ListCategories(ctx context.Context, pool *pgxpool.Pool) ([]string, error) {
+	const q = `
+		SELECT DISTINCT category
+		FROM transactions
+		WHERE category IS NOT NULL
+		ORDER BY category
+	`
+	rows, err := pool.Query(ctx, q)
+	if err != nil {
+		return nil, fmt.Errorf("list categories: %w", err)
+	}
+	defer rows.Close()
+
+	var results []string
+	for rows.Next() {
+		var cat string
+		if err := rows.Scan(&cat); err != nil {
+			return nil, fmt.Errorf("scan category: %w", err)
+		}
+		results = append(results, cat)
+	}
+	return results, rows.Err()
+}
+
 // TransactionFilter holds optional narrowing criteria for ListTransactions
 // and CountTransactions. Zero values mean "no filter on this field".
 type TransactionFilter struct {

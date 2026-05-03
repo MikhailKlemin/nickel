@@ -22,6 +22,18 @@ func (s *Server) handleListTransactions(w http.ResponseWriter, r *http.Request) 
 	s.serveTransactionList(w, r, f)
 }
 
+func (s *Server) handleListCategories(w http.ResponseWriter, r *http.Request) {
+	cats, err := statement.ListCategories(r.Context(), s.pool)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "INTERNAL", err.Error())
+		return
+	}
+	if cats == nil {
+		cats = []string{}
+	}
+	respondJSON(w, http.StatusOK, cats)
+}
+
 func (s *Server) handlePatchCategory(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {

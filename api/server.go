@@ -83,6 +83,9 @@ func (s *Server) routes() {
 
 	// --- Health ---
 	s.mux.HandleFunc("GET /health", s.handleHealth)
+
+	// List all distinct categories.
+	s.mux.HandleFunc("GET /v1/categories", s.handleListCategories)
 }
 
 // Handler wraps the internal mux with middleware and returns the final
